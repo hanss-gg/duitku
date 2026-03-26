@@ -113,21 +113,30 @@ Jika pesan bukan transaksi, kembalikan: null
 // ── Gemini Vision Parser (Untuk Struk/Foto) ─────────────────
 export async function parseStruk(imageBuffer, mimeType) {
   const prompt = `
-Kamu adalah parser struk belanja. Ekstrak data dari struk ini dan kembalikan JSON.
-Cari total belanja (nominal), kategori yang paling cocok, dan nama toko (catatan).
+Kamu adalah OCR Parser yang sangat teliti untuk struk belanja (receipt). 
+Tugasmu adalah mengekstrak 3 informasi utama dari gambar ini:
 
-Kategori pengeluaran: ${KATEGORI_PENGELUARAN.map(k => k.id).join(", ")}
+1. **Nominal**: Cari total akhir yang harus dibayar (Grand Total). Abaikan pajak/diskon jika ada, ambil angka finalnya saja.
+2. **Catatan**: Ambil nama Toko/Merchant (misal: Alfamart, Indomaret, Kopi Kenangan, dll).
+3. **Kategori**: Pilih kategori yang paling cocok dari daftar berikut:
+   Daftar Kategori: ${KATEGORI_PENGELUARAN.map(k => k.id).join(", ")}
 
-Kembalikan HANYA JSON:
+Aturan Penting:
+- Jika angka sulit dibaca, berikan estimasi terbaikmu.
+- Jika tidak ada kategori yang cocok, gunakan "lainnya".
+- Jangan memberikan teks penjelasan apa pun, HANYA kembalikan JSON.
+
+Format JSON:
 {
   "tipe": "pengeluaran",
   "nominal": number,
-  "kategori": string (id kategori),
-  "catatan": string (nama toko/item utama)
+  "kategori": string,
+  "catatan": string
 }
 `;
 
   try {
+    console.log("📷 [OCR] Mengirim gambar ke Gemini Vision...");
     const result = await model.generateContent([
       { text: prompt },
       {
@@ -139,12 +148,27 @@ Kembalikan HANYA JSON:
     ]);
     const response = await result.response;
     let raw = response.text().trim();
-    raw = raw.replace(/```json|```/g, "").trim();
     
-    const parsed = JSON.parse(raw);
+    console.log("📝 [OCR] Raw response dari Gemini:", raw);
+
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.error("❌ [OCR] Tidak ditemukan JSON dalam response");
+      return null;
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    
+    // Validasi nominal
+    if (!parsed.nominal || isNaN(parsed.nominal)) {
+      console.warn("⚠️ [OCR] Nominal tidak valid:", parsed.nominal);
+      return null;
+    }
+
+    console.log("✅ [OCR] Berhasil di-parse:", parsed);
     return enrichResult(parsed);
   } catch (err) {
-    console.error("Gemini Vision Error:", err.message);
+    console.error("❌ [OCR] Error:", err.message);
     return null;
   }
 }
