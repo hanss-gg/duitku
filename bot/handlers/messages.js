@@ -1,6 +1,6 @@
 // bot/handlers/messages.js
 import { Markup } from "telegraf";
-import { parseTransaksi } from "../services/parser.js";
+import { parseTransaksi, parseStruk } from "../services/parser.js";
 import { simpanTransaksi, getBudgets, getSaldo } from "../services/sheets.js";
 import { formatRupiah } from "../utils/formatter.js";
 
@@ -91,6 +91,7 @@ export function registerMessageHandler(bot) {
   // ── Handle Photo (OCR) ──────────────────────────────────────
   bot.on("photo", async (ctx) => {
     try {
+      console.log("📷 Menerima foto dari Telegram...");
       await ctx.reply("⏳ Sedang membaca struk...");
       await ctx.sendChatAction("typing");
 
@@ -98,8 +99,15 @@ export function registerMessageHandler(bot) {
       const photo = ctx.message.photo[ctx.message.photo.length - 1];
       const link = await ctx.telegram.getFileLink(photo.file_id);
       
-      const response = await fetch(link);
+      console.log("🔗 Mengunduh file dari:", link.href);
+      const response = await fetch(link.href);
+      
+      if (!response.ok) {
+        throw new Error(`Gagal download file: ${response.statusText}`);
+      }
+      
       const buffer = Buffer.from(await response.arrayBuffer());
+      console.log(`📦 Berhasil mengunduh gambar (${buffer.length} bytes)`);
 
       const hasil = await parseStruk(buffer, "image/jpeg");
 
