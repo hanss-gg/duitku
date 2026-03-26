@@ -10,9 +10,7 @@ import { KATEGORI_PENGELUARAN, KATEGORI_PEMASUKAN } from "../shared/constants.js
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
-// Konfigurasi Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-// Gunakan gemini-flash-latest agar otomatis memilih model flash yang tersedia dan punya kuota
 const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
 const SEMUA_KATEGORI = {
@@ -20,21 +18,16 @@ const SEMUA_KATEGORI = {
   pemasukan:   KATEGORI_PEMASUKAN,
 };
 
-// ── Regex Parser (Mencoba memahami format umum) ──────────────
+// ── Regex Parser ──────────────────────────────────────────────
 function parseDenganRegex(teks) {
   const clean = teks.toLowerCase().trim();
   
-  // Format: "makan 20rb" atau "gaji 5.000.000" atau "20000 kopi"
-  // Hapus titik ribuan dulu (misal: 5.000.000 -> 5000000)
+  // 1. Extract Nominal
   const regexNominal = /(\d+([,.]\d{3})*|(\d+))(\s*(rb|k|ribu|jt|juta))?/gi;
   const matches = [...clean.matchAll(regexNominal)];
-  
   if (matches.length === 0) return null;
   
-  // Ambil angka pertama yang ditemukan
   let [full, angkaStr, , , , unit] = matches[0];
-  
-  // Bersihkan angka dari titik ribuan atau koma desimal
   let nominal = parseFloat(angkaStr.replace(/\./g, "").replace(",", "."));
   
   if (unit) {
@@ -43,23 +36,38 @@ function parseDenganRegex(teks) {
     if (u === "jt" || u === "juta") nominal *= 1000000;
   }
   
-  // Tentukan tipe (default pengeluaran, kecuali ada kata kunci pemasukan)
-  const kataKunciPemasukan = ["gaji", "bonus", "pemasukan", "untung", "income", "dapat", "terima"];
-  const tipe = kataKunciPemasukan.some(k => clean.includes(k)) ? "pemasukan" : "pengeluaran";
+  // 2. Determine Type (Pemasukan vs Pengeluaran)
+  // Check keywords from shared/constants.js for income
+  const isPemasukan = KATEGORI_PEMASUKAN.some(cat => 
+    cat.keywords?.some(kw => clean.includes(kw)) || clean.includes(cat.id)
+  );
+  const tipe = isPemasukan ? "pemasukan" : "pengeluaran";
   
-  // Cari kategori berdasarkan kata kunci di teks
+  // 3. Determine Category
   const daftarKategori = SEMUA_KATEGORI[tipe];
   let kategori = "lainnya";
-  let catatan = clean.replace(full, "").trim();
+  let foundCategory = null;
 
+  // Try to find specific category match
   for (const k of daftarKategori) {
-    if (k.keywords?.some(kw => clean.includes(kw))) {
-      kategori = k.id;
-      // Bersihkan kata kunci dari catatan jika ada
-      catatan = catatan.replace(new RegExp(k.keywords.join("|"), "gi"), "").trim();
+    if (k.keywords?.some(kw => clean.includes(kw)) || clean.includes(k.id)) {
+      foundCategory = k;
       break;
     }
   }
+
+  if (foundCategory) {
+    kategori = foundCategory.id;
+  }
+
+  // 4. Clean up Note (remove nominal and keywords)
+  let catatan = clean.replace(full, "").trim();
+  if (foundCategory && foundCategory.keywords) {
+    foundCategory.keywords.forEach(kw => {
+      catatan = catatan.replace(kw, "");
+    });
+  }
+  catatan = catatan.replace(/\s+/g, " ").trim();
 
   return {
     tipe,
@@ -69,40 +77,29 @@ function parseDenganRegex(teks) {
   };
 }
 
-// ── Gemini Parser (Fallback jika Regex kurang akurat) ─────────
+// ── Gemini Parser ─────────────────────────────────────────────
 async function parseDenganGemini(teks) {
+  if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY.includes("PASTE")) return null;
+
   const prompt = `
-Kamu adalah parser transaksi keuangan. Parse pesan berikut dan kembalikan JSON.
+Parse transaksi: "${teks}"
+Kategori Pengeluaran: ${KATEGORI_PENGELUARAN.map(k => k.id).join(", ")}
+Kategori Pemasukan: ${KATEGORI_PEMASUKAN.map(k => k.id).join(", ")}
 
-Pesan: "${teks}"
-
-Kategori pengeluaran: ${KATEGORI_PENGELUARAN.map(k => k.id).join(", ")}
-Kategori pemasukan: ${KATEGORI_PEMASUKAN.map(k => k.id).join(", ")}
-
-Aturan parsing nominal:
-- "25000" atau "25.000" = 25000
-- "800rb" atau "800k" atau "800ribu" = 800000
-- "1.5jt" atau "1,5jt" atau "1.5juta" = 1500000
-
-Kembalikan HANYA JSON ini:
+Kembalikan JSON:
 {
   "tipe": "pengeluaran" | "pemasukan",
   "nominal": number,
-  "kategori": string (id kategori),
+  "kategori": string,
   "catatan": string
 }
-
-Jika pesan bukan transaksi, kembalikan: null
+Jika bukan transaksi, balas: null
 `;
 
   try {
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    let raw = response.text().trim();
-    
-    // Bersihkan markdown jika ada
-    raw = raw.replace(/```json|```/g, "").trim();
-    
+    let raw = response.text().trim().replace(/```json|```/g, "");
     if (raw === "null") return null;
     return JSON.parse(raw);
   } catch (err) {
@@ -111,107 +108,51 @@ Jika pesan bukan transaksi, kembalikan: null
   }
 }
 
-// ── Gemini Vision Parser (Untuk Struk/Foto) ─────────────────
 export async function parseStruk(imageBuffer, mimeType) {
+  if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY.includes("PASTE")) return null;
+
   const prompt = `
-Kamu adalah OCR Parser yang sangat teliti untuk struk belanja (receipt). 
-Tugasmu adalah mengekstrak 3 informasi utama dari gambar ini:
+Ekstrak dari struk:
+1. Nominal Total (Grand Total)
+2. Nama Toko (Catatan)
+3. Kategori (pilih dari: ${KATEGORI_PENGELUARAN.map(k => k.id).join(", ")})
 
-1. **Nominal**: Cari total akhir yang harus dibayar (Grand Total). Abaikan pajak/diskon jika ada, ambil angka finalnya saja.
-2. **Catatan**: Ambil nama Toko/Merchant (misal: Alfamart, Indomaret, Kopi Kenangan, dll).
-3. **Kategori**: Pilih kategori yang paling cocok dari daftar berikut:
-   Daftar Kategori: ${KATEGORI_PENGELUARAN.map(k => k.id).join(", ")}
-
-Aturan Penting:
-- Jika angka sulit dibaca, berikan estimasi terbaikmu.
-- Jika tidak ada kategori yang cocok, gunakan "lainnya".
-- Jangan memberikan teks penjelasan apa pun, HANYA kembalikan JSON.
-
-Format JSON:
-{
-  "tipe": "pengeluaran",
-  "nominal": number,
-  "kategori": string,
-  "catatan": string
-}
+Balas HANYA JSON:
+{ "tipe": "pengeluaran", "nominal": number, "kategori": string, "catatan": string }
 `;
 
   try {
-    console.log("📷 [OCR] Mengirim gambar ke Gemini Vision...");
-    const result = await model.generateContent([
-      { text: prompt },
-      {
-        inlineData: {
-          data: imageBuffer.toString("base64"),
-          mimeType
-        }
-      }
-    ]);
+    const result = await model.generateContent([{ text: prompt }, { inlineData: { data: imageBuffer.toString("base64"), mimeType } }]);
     const response = await result.response;
-    let raw = response.text().trim();
-    
-    console.log("📝 [OCR] Raw response dari Gemini:", raw);
-
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      console.error("❌ [OCR] Tidak ditemukan JSON dalam response");
-      return null;
-    }
-
-    const parsed = JSON.parse(jsonMatch[0]);
-    
-    // Validasi nominal
-    if (!parsed.nominal || isNaN(parsed.nominal)) {
-      console.warn("⚠️ [OCR] Nominal tidak valid:", parsed.nominal);
-      return null;
-    }
-
-    console.log("✅ [OCR] Berhasil di-parse:", parsed);
-    return enrichResult(parsed);
+    const jsonMatch = response.text().match(/\{[\s\S]*\}/);
+    return jsonMatch ? enrichResult(JSON.parse(jsonMatch[0])) : null;
   } catch (err) {
-    console.error("❌ [OCR] Error:", err.message);
+    console.error("OCR Error:", err.message);
     return null;
   }
 }
 
-// ── Main Export ───────────────────────────────────────────────
 export async function parseTransaksi(teks) {
-  // 1. Coba Regex dulu (Cepat & Gratis)
-  console.log("🔍 Mencoba Regex Parser...");
+  // 1. Regex Match (Fast)
   const regexResult = parseDenganRegex(teks);
-  
-  // Jika regex cukup yakin (ada nominal & kategori selain 'lainnya')
   if (regexResult && regexResult.kategori !== "lainnya") {
-    console.log("✅ Regex Match!");
     return enrichResult(regexResult);
   }
 
-  // 2. Fallback ke Gemini (Lebih pintar)
-  console.log("🧠 Regex kurang yakin, memanggil Gemini...");
+  // 2. Gemini Fallback
   const geminiResult = await parseDenganGemini(teks);
-  
-  if (geminiResult) {
-    console.log("✅ Gemini Match!");
-    return enrichResult(geminiResult);
-  }
+  if (geminiResult) return enrichResult(geminiResult);
 
-  // 3. Terakhir, jika Gemini gagal tapi Regex punya hasil 'lainnya'
-  if (regexResult) {
-    console.log("📦 Menggunakan hasil Regex (kategori lainnya)");
-    return enrichResult(regexResult);
-  }
-
-  return null;
+  // 3. Default to Regex result if it at least found a nominal
+  return regexResult ? enrichResult(regexResult) : null;
 }
 
 function enrichResult(parsed) {
-  const daftarKategori = SEMUA_KATEGORI[parsed.tipe] || [];
-  const kategoriData = daftarKategori.find(k => k.id === parsed.kategori)
-    ?? daftarKategori.find(k => k.id === "lainnya");
-
+  const daftar = SEMUA_KATEGORI[parsed.tipe] || [];
+  const cat = daftar.find(k => k.id === parsed.kategori) || daftar.find(k => k.id === "lainnya");
   return {
     ...parsed,
-    kategoriLabel: kategoriData?.label ?? parsed.kategori,
-    kategoriEmoji: kategoriData?.emoji ?? "📦",
+    kategoriLabel: cat?.label || parsed.kategori,
+    kategoriEmoji: cat?.emoji || "📦",
   };
 }
