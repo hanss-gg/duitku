@@ -1,0 +1,13 @@
+{
+  "name": "Duitku - Tracker Uang Jajan",
+  "short_name": "Duitku",
+  "description": "Tracker keuangan mahasiswa dengan Telegram Bot",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0f1e",
+  "theme_color": "#0f172a",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
