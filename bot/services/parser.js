@@ -12,7 +12,10 @@ dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 // Konfigurasi Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI.getGenerativeModel({ 
+  model: "gemini-1.5-flash",
+  apiVersion: "v1" // Coba paksa v1 jika v1beta bermasalah
+});
 
 const SEMUA_KATEGORI = {
   pengeluaran: KATEGORI_PENGELUARAN,
