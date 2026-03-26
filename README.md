@@ -1,36 +1,40 @@
 # 💰 Duitku — Tracker Uang Jajan Mahasiswa
 
-> Catat pengeluaran lewat Telegram, pantau keuangan lewat dashboard web.
+> Catat pengeluaran lewat Telegram, pantau keuangan lewat dashboard web "Glassmorphism" yang modern.
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Version](https://img.shields.io/badge/version-1.1.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Status](https://img.shields.io/badge/status-in%20development-yellow)
+![Status](https://img.shields.io/badge/status-active-brightgreen)
 
 ---
 
-## ✨ Fitur
+## ✨ Fitur Utama
 
-- 🤖 **Telegram Bot** — input transaksi cukup dengan ketik pesan natural
-- 📊 **Dashboard Web** — visualisasi grafik & laporan bulanan
-- ☁️ **Google Sheets** — database gratis, bisa diedit manual juga
-- 🔐 **Aman** — hanya kamu yang bisa akses, auth via Google OAuth
-- 📱 **PWA** — bisa diinstall di homescreen HP
+- 🤖 **Telegram Bot (Hybrid Parser)** — input transaksi dengan pesan natural. Menggunakan kombinasi Regex (cepat & gratis) + Gemini AI (pintar) untuk akurasi maksimal.
+- 📸 **OCR Struk (Gemini Vision)** — cukup foto struk belanja, bot akan otomatis mencatat nominal, toko, dan kategorinya.
+- 📊 **Dashboard "Glassmorphism 2.0"** — visualisasi keuangan dengan desain kaca transparan yang modern, mewah, dan responsif.
+- 📈 **Trend & Bar Toggle** — pantau pengeluaran mingguan dengan grafik garis (smooth trend) atau grafik batang sesuai selera.
+- ☁️ **Google Sheets Database** — data disimpan di spreadsheet pribadi kamu, gratis selamanya dan mudah diedit manual.
+- 🔐 **Keamanan Maksimal** — login dashboard via Google OAuth & whitelist Chat ID untuk akses Bot.
 
 ---
 
 ## 🤖 Cara Pakai Bot Telegram
 
 ```
-makan siang 25000        → catat pengeluaran Rp25.000
-kiriman ortu 800000      → catat pemasukan Rp800.000
-kopi 18rb                → bot otomatis mengerti "18rb" = Rp18.000
+makan siang 25000        → catat pengeluaran Rp25.000 (Kategori: Makan)
+kiriman ortu 800rb       → catat pemasukan Rp800.000 (Kategori: Kiriman)
+kopi 18k                 → bot mengerti "18k" = Rp18.000
 
-/saldo                   → cek saldo & ringkasan bulan ini
-/laporan                 → laporan lengkap bulan ini
-/riwayat                 → 10 transaksi terakhir
-/hapus                   → hapus transaksi terakhir
-/help                    → lihat semua perintah
+[Kirim Foto Struk]       → bot membaca total & toko secara otomatis
 ```
+
+**Commands:**
+- `/saldo` — cek saldo & ringkasan bulan ini
+- `/laporan` — laporan kategori detail
+- `/riwayat` — 10 transaksi terakhir
+- `/hapus` — hapus transaksi terakhir jika salah input
+- `/arsip` — pindahkan data bulan lalu ke sheet arsip agar tetap ringan
 
 ---
 
@@ -52,19 +56,15 @@ Web Dashboard (React) ──────────→  Google Sheets API
 
 ```
 duitku/
-├── dashboard/          # Frontend React (Vite)
+├── dashboard/          # Frontend React + Vite (Tailwind CSS)
 │   └── src/
-│       ├── components/ # Komponen UI
-│       ├── pages/      # Halaman (Dashboard, Riwayat, Laporan)
-│       ├── hooks/      # Custom hooks
-│       └── utils/      # Helper functions
-├── bot/                # Telegram Bot (Node.js)
-│   ├── handlers/       # Handler pesan & command
-│   ├── services/       # Google Sheets, Claude API
-│   └── utils/          # Parser, formatter
-├── shared/             # Konstanta & tipe data bersama
-├── docs/               # Dokumentasi setup
-└── .github/workflows/  # CI/CD GitHub Actions
+│       ├── components/ # Chart, Navbar, Items (Glassmorphism UI)
+│       └── pages/      # Dashboard, Riwayat, Laporan, Input
+├── bot/                # Telegram Bot (Telegraf.js)
+│   ├── services/       # Parser (Regex+Gemini), Sheets API
+│   └── handlers/       # Command & Message logic
+├── shared/             # Keywords & Kategori (Sync antara Bot & Web)
+└── docs/               # Panduan Setup
 ```
 
 ---
@@ -73,37 +73,19 @@ duitku/
 
 Lihat panduan lengkap di [`docs/SETUP.md`](docs/SETUP.md)
 
-Ringkasan:
-1. Clone repo ini
-2. Setup Google Sheets & ambil credentials
-3. Buat Telegram Bot via @BotFather
-4. Isi file `.env` (lihat `.env.example`)
-5. `npm install` dan `npm run dev`
-
 ---
 
 ## 🛠️ Tech Stack
 
 | Bagian | Teknologi |
 |---|---|
-| Dashboard | React + Vite |
-| Styling | Tailwind CSS |
-| Grafik | Chart.js |
+| Dashboard | React 18 + Vite |
+| Styling | Tailwind CSS (Glassmorphism 2.0) |
+| Grafik | Chart.js 4 |
 | Bot | Node.js + Telegraf |
-| AI Parsing | Hybrid (Regex + Gemini 1.5 Flash) |
-| Database | Google Sheets API |
+| AI / OCR | Gemini 1.5 Flash (Google AI SDK) |
+| Database | Google Sheets API v4 |
 | Auth | Google OAuth 2.0 |
-| Hosting Dashboard | Vercel |
-| Hosting Bot | Railway |
-
----
-
-## 🔐 Keamanan
-
-- Bot hanya merespons Telegram Chat ID milik kamu
-- Dashboard hanya bisa diakses oleh email Google yang di-whitelist
-- Semua API keys disimpan di environment variables, tidak di kode
-- Koneksi HTTPS otomatis via Vercel
 
 ---
 
