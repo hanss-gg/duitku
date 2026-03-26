@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import { Telegraf } from "telegraf";
 import { registerCommands } from "./handlers/commands.js";
 import { registerMessageHandler } from "./handlers/messages.js";
+import { registerCallbackHandlers } from "./handlers/callbacks.js";
 import { pastikanSheetSiap } from "./services/sheets.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -35,6 +36,7 @@ bot.use(async (ctx, next) => {
 // ── Register handlers ─────────────────────────────────────────
 registerCommands(bot);
 registerMessageHandler(bot);
+registerCallbackHandlers(bot);
 
 // ── Error handler ─────────────────────────────────────────────
 bot.catch((err, ctx) => {

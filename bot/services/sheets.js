@@ -36,6 +36,7 @@ function getSheetsClient(tokens = null) {
 }
 
 const SPREADSHEET_ID = process.env.GOOGLE_SHEETS_ID;
+const BUDGET_SHEET_NAME = "Anggaran";
 
 // ── Initialization ───────────────────────────────────────────
 // Memastikan sheet "Transaksi" ada dengan header yang benar
@@ -43,10 +44,10 @@ export async function pastikanSheetSiap(tokens = null) {
   const sheets = getSheetsClient(tokens);
   
   try {
-    // Cek apakah sheet sudah ada
     const spreadsheet = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEET_ID });
-    const sheetExists = spreadsheet.data.sheets.some(s => s.properties.title === SHEET_NAME);
     
+    // 1. Cek sheet Transaksi
+    const sheetExists = spreadsheet.data.sheets.some(s => s.properties.title === SHEET_NAME);
     if (!sheetExists) {
       console.log(`📝 Membuat sheet "${SHEET_NAME}"...`);
       await sheets.spreadsheets.batchUpdate({
@@ -55,8 +56,6 @@ export async function pastikanSheetSiap(tokens = null) {
           requests: [{ addSheet: { properties: { title: SHEET_NAME } } }]
         }
       });
-      
-      // Tambah header
       await sheets.spreadsheets.values.update({
         spreadsheetId: SPREADSHEET_ID,
         range: `${SHEET_NAME}!A1:G1`,
@@ -66,9 +65,50 @@ export async function pastikanSheetSiap(tokens = null) {
         }
       });
     }
+
+    // 2. Cek sheet Anggaran
+    const budgetExists = spreadsheet.data.sheets.some(s => s.properties.title === BUDGET_SHEET_NAME);
+    if (!budgetExists) {
+      console.log(`📝 Membuat sheet "${BUDGET_SHEET_NAME}"...`);
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId: SPREADSHEET_ID,
+        requestBody: {
+          requests: [{ addSheet: { properties: { title: BUDGET_SHEET_NAME } } }]
+        }
+      });
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `${BUDGET_SHEET_NAME}!A1:B1`,
+        valueInputOption: "USER_ENTERED",
+        requestBody: {
+          values: [["Kategori ID", "Limit Nominal"]]
+        }
+      });
+    }
   } catch (err) {
     console.error("❌ Gagal inisialisasi sheet:", err.message);
     throw err;
+  }
+}
+
+// ── Budgeting ────────────────────────────────────────────────
+
+export async function getBudgets(tokens = null) {
+  const sheets = getSheetsClient(tokens);
+  try {
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${BUDGET_SHEET_NAME}!A2:B`,
+    });
+    const rows = res.data.values || [];
+    const budgets = {};
+    rows.forEach(row => {
+      if (row[0]) budgets[row[0]] = Number(row[1]) || 0;
+    });
+    return budgets;
+  } catch (err) {
+    console.warn("Gagal ambil anggaran:", err.message);
+    return {};
   }
 }
 
@@ -248,6 +288,116 @@ export async function getRiwayat(limit = 10, bulan = null, tokens = null) {
   }
 
   return rows.slice(-limit).reverse().map(rowToTransaksi).filter(Boolean);
+}
+
+export async function arsipDataLama(tokens = null) {
+  const sheets = getSheetsClient(tokens);
+  const bulanIni = getBulanString();
+
+  // 1. Ambil semua data dari Transaksi
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${SHEET_NAME}!A2:G`,
+  });
+
+  const allRows = res.data.values || [];
+  if (!allRows.length) return { archived: 0 };
+
+  // 2. Filter data yang BUKAN bulan ini
+  const rowsToArchive = allRows.filter(row => {
+    const tgl = row[1]?.slice(0, 7);
+    return tgl && tgl < bulanIni;
+  });
+
+  if (!rowsToArchive.length) return { archived: 0 };
+
+  // 3. Kelompokkan berdasarkan bulan untuk nama sheet arsip
+  const groups = {};
+  rowsToArchive.forEach(row => {
+    const tgl = row[1]?.slice(0, 7).replace("-", "_");
+    if (!groups[tgl]) groups[tgl] = [];
+    groups[tgl].push(row);
+  });
+
+  // 4. Pindahkan ke sheet arsip masing-masing
+  for (const [bulan, data] of Object.entries(groups)) {
+    const archiveName = `Arsip_${bulan}`;
+    
+    // Pastikan sheet arsip ada
+    const spreadsheet = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEET_ID });
+    const exists = spreadsheet.data.sheets.some(s => s.properties.title === archiveName);
+    
+    if (!exists) {
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId: SPREADSHEET_ID,
+        requestBody: { requests: [{ addSheet: { properties: { title: archiveName } } }] }
+      });
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `${archiveName}!A1:G1`,
+        valueInputOption: "USER_ENTERED",
+        requestBody: { values: [["ID", "Tanggal", "Tipe", "Nominal", "Kategori", "Catatan", "Sumber"]] }
+      });
+    }
+
+    // Append data
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${archiveName}!A:G`,
+      valueInputOption: "USER_ENTERED",
+      requestBody: { values: data }
+    });
+  }
+
+  // 5. Hapus data yang sudah diarsip dari sheet utama
+  // Strategi termudah: Tulis ulang sheet Transaksi hanya dengan data bulan ini
+  const rowsToKeep = allRows.filter(row => row[1]?.slice(0, 7) >= bulanIni);
+  
+  await sheets.spreadsheets.values.clear({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${SHEET_NAME}!A2:G`,
+  });
+
+  if (rowsToKeep.length) {
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${SHEET_NAME}!A2`,
+      valueInputOption: "USER_ENTERED",
+      requestBody: { values: rowsToKeep }
+    });
+  }
+
+  return { archived: rowsToArchive.length };
+}
+
+export async function hapusTransaksiById(id, tokens = null) {
+  const sheets = getSheetsClient(tokens);
+
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${SHEET_NAME}!A:A`,
+  });
+
+  const rows = res.data.values || [];
+  const rowIndex = rows.findIndex(row => row[0] === id);
+
+  if (rowIndex === -1) return null;
+
+  const realRowIndex = rowIndex + 1; // 1-based index
+
+  // Ambil data sebelum dihapus untuk konfirmasi
+  const dataRes = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${SHEET_NAME}!A${realRowIndex}:G${realRowIndex}`,
+  });
+  const transaksi = rowToTransaksi(dataRes.data.values[0]);
+
+  await sheets.spreadsheets.values.clear({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${SHEET_NAME}!A${realRowIndex}:G${realRowIndex}`,
+  });
+
+  return transaksi;
 }
 
 export async function hapusTransaksiTerakhir(tokens = null) {

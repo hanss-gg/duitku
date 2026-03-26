@@ -1,5 +1,5 @@
 // bot/handlers/commands.js
-import { getSaldo, getLaporan, getRiwayat, hapusTransaksiTerakhir } from "../services/sheets.js";
+import { getSaldo, getLaporan, getRiwayat, hapusTransaksiTerakhir, arsipDataLama } from "../services/sheets.js";
 import { formatRupiah, formatTanggal } from "../utils/formatter.js";
 
 export function registerCommands(bot) {
@@ -120,6 +120,21 @@ export function registerCommands(bot) {
     } catch (err) {
       console.error("Hapus command error:", err);
       ctx.reply("❌ Gagal menghapus transaksi terakhir.");
+    }
+  });
+
+  // /arsip
+  bot.command("arsip", async (ctx) => {
+    try {
+      await ctx.sendChatAction("typing");
+      const { archived } = await arsipDataLama();
+      if (archived === 0) {
+        return ctx.reply("📦 Semua data sudah dalam kondisi terarsip atau masih dalam bulan ini.");
+      }
+      await ctx.reply(`✅ Berhasil mengarsipkan *${archived}* transaksi lama ke sheet arsip.`, { parse_mode: "Markdown" });
+    } catch (err) {
+      console.error("Arsip command error:", err);
+      ctx.reply("❌ Gagal melakukan pengarsipan.");
     }
   });
 }

@@ -1,83 +1,69 @@
-# 🚀 Panduan Setup Lengkap — Duitku
+# 🚀 Panduan Setup Duitku
 
-Ikuti langkah-langkah di bawah ini untuk menjalankan **Duitku** secara lokal di komputer kamu.
-
----
-
-## 📋 Persyaratan Sistem
-- **Node.js** (v20 atau lebih baru)
-- **Akun Google** (untuk Google Sheets & OAuth)
-- **Bot Telegram** (gratis dari @BotFather)
-- **Gemini API Key** (gratis dari Google AI Studio)
+Ikuti langkah-langkah berikut secara berurutan.
 
 ---
 
-## 1. Clone & Persiapan Folder
+## 1. Clone Repository
 
 ```bash
-git clone https://github.com/hanss-gg/duitku.git
+git clone https://github.com/username/duitku.git
 cd duitku
 ```
 
 ---
 
-## 2. Konfigurasi Google Cloud (PENTING)
+## 2. Setup Google Cloud
 
-1. Buka [Google Cloud Console](https://console.cloud.google.com/).
-2. Buat Project baru (misal: "Duitku Personal Finance").
-3. Aktifkan API:
-   - Cari & Enable **Google Sheets API**.
-   - Cari & Enable **Google Drive API**.
-4. Buat **OAuth 2.0 Client ID**:
-   - Menu: APIs & Services > Credentials > Create Credentials > OAuth client ID.
-   - Application Type: **Web application**.
-   - Authorized Redirect URIs:
-     - `http://localhost:3001/auth/callback` (Backend API)
-     - `http://localhost:9999/callback` (Setup Script)
-5. Simpan **Client ID** dan **Client Secret** untuk file `.env`.
+1. Buka [console.cloud.google.com](https://console.cloud.google.com)
+2. Buat project baru → beri nama "Duitku"
+3. Aktifkan **Google Sheets API** dan **Google Drive API**
+4. Buka **Credentials** → Create Credentials → OAuth 2.0 Client ID
+   - Application type: Web application
+   - Authorized redirect URIs: `http://localhost:3005/auth/callback`
+5. Download credentials → salin `Client ID` dan `Client Secret`
 
 ---
 
-## 3. Persiapan Google Sheets
+## 3. Buat Google Sheets
 
-1. Buat Google Sheets baru di [sheets.new](https://sheets.new).
-2. Salin **Spreadsheet ID** dari URL browser kamu:
-   `https://docs.google.com/spreadsheets/d/[SPREADSHEET_ID_DISINI]/edit`
-3. Masukkan ID tersebut ke dalam file `.env`.
-   *(Bot akan otomatis membuat tab "Transaksi" saat pertama kali dijalankan).*
-
----
-
-## 4. Persiapan Telegram Bot
-
-1. Chat [@BotFather](https://t.me/botfather) di Telegram.
-2. Gunakan `/newbot` untuk membuat bot baru.
-3. Salin **API Token** yang diberikan.
-4. Dapatkan **Chat ID** kamu: Chat ke [@userinfobot](https://t.me/userinfobot) untuk mendapatkan ID numerik kamu. Bot Duitku hanya akan merespon pesan dari ID ini (keamanan).
+1. Buka [sheets.google.com](https://sheets.google.com) → buat spreadsheet baru
+2. Beri nama spreadsheet: `Duitku Database`
+3. Salin **Spreadsheet ID** dari URL:
+   `https://docs.google.com/spreadsheets/d/**SPREADSHEET_ID**/edit`
+   *(Bot akan otomatis membuat sheet "Transaksi" dan headernya saat pertama kali dijalankan)*
 
 ---
 
-## 5. Setup Environment Variables (`.env`)
+## 4. Buat Telegram Bot
 
-Copy file contoh ke file asli:
+1. Buka Telegram → cari **@BotFather**
+2. Kirim `/newbot`
+3. Ikuti instruksi → salin **Bot Token**
+4. Cek Chat ID kamu via **@userinfobot** → kirim pesan apa saja
+
+---
+
+## 5. Setup AI Parser (Pilih salah satu)
+
+Duitku menggunakan **Hybrid Parser**:
+1. **Regex (Bawaan)**: Otomatis aktif, GRATIS, dan sangat cepat untuk format `makan 20k`, `gaji 5jt`, dll.
+2. **Gemini AI (Direkomendasikan)**: Untuk pesan bahasa alami yang lebih kompleks.
+   - Buka [aistudio.google.com](https://aistudio.google.com/)
+   - Buat API Key (Free Tier)
+   - Salin ke `GEMINI_API_KEY` di `.env`
+
+---
+
+## 6. Setup Environment Variables
+
 ```bash
 cp .env.example .env
 ```
 
-Buka file `.env` dan isi semua variabel yang diperlukan:
-- `TELEGRAM_BOT_TOKEN`: Dari BotFather.
-- `TELEGRAM_ALLOWED_CHAT_ID`: ID kamu dari userinfobot.
-- `GOOGLE_CLIENT_ID`: Dari Google Cloud.
-- `GOOGLE_CLIENT_SECRET`: Dari Google Cloud.
-- `GOOGLE_SHEETS_ID`: ID Google Sheets yang kamu buat tadi.
-- `GEMINI_API_KEY`: Dapatkan dari [Google AI Studio](https://aistudio.google.com/).
-- `ALLOWED_EMAIL`: Email Google kamu (untuk whitelist login dashboard).
+Isi file `.env` dengan semua nilai yang sudah dikumpulkan.
 
----
-
-## 6. Mendapatkan Google Token
-
-Jalankan script otomatis untuk memberikan akses bot ke Google Sheets kamu:
+Untuk `GOOGLE_TOKEN`, jalankan script berikut untuk mendapatkan token OAuth:
 
 ```bash
 cd bot
@@ -85,53 +71,72 @@ npm install
 node scripts/get-token.js
 ```
 
-**Langkah:**
-1. Klik link yang muncul di terminal.
-2. Login dengan akun Google kamu.
-3. Izinkan akses.
-4. Terminal akan memunculkan string JSON panjang. **Salin string tersebut ke variabel `GOOGLE_TOKEN` di file `.env`**.
+Ikuti instruksi di terminal (buka URL, login Google, izinkan akses), lalu salin JSON token yang muncul ke `GOOGLE_TOKEN` di `.env`.
 
 ---
 
-## 7. Menjalankan Aplikasi
+## 7. Install & Jalankan Bot
 
-Sekarang kamu bisa menjalankan Bot dan Dashboard secara bersamaan:
-
-### Menjalankan Bot & Backend Server
 ```bash
 cd bot
+npm install
 npm run dev:all
 ```
-*Bot akan berjalan di port 3001.*
 
-### Menjalankan Dashboard Web
+**Test**: kirim pesan ke bot Telegram kamu, contoh: `makan siang 25000` atau `kopi 18k`.
+
+---
+
+## 8. Install & Jalankan Dashboard
+
 ```bash
-# Buka terminal baru
 cd dashboard
 npm install
 npm run dev
 ```
-*Dashboard akan berjalan di port 3006.*
 
-Buka: [http://localhost:3006](http://localhost:3006) di browser kamu.
-
----
-
-## 🧪 Cara Testing
-
-1. Buka Telegram dan cari bot kamu.
-2. Kirim pesan: `makan siang 25000` atau `kopi 18k`.
-3. Bot akan membalas dengan konfirmasi dan sisa saldo.
-4. Buka Google Sheets kamu, transaksi baru akan muncul otomatis.
-5. Cek Dashboard, grafik akan terupdate seketika.
+Buka: [http://localhost:3006](http://localhost:3006)
 
 ---
 
-## 🛠️ Troubleshooting
+## 9. Deploy ke Production
 
-- **Error: 401 Unauthorized**: Pastikan `GOOGLE_TOKEN` di `.env` sudah terisi dengan benar (hasil dari `get-token.js`).
-- **Bot tidak balas**: Cek terminal bot, pastikan `TELEGRAM_ALLOWED_CHAT_ID` sudah benar (biasanya berupa angka, misal: `123456789`).
-- **Google Sheets tidak terbuat**: Pastikan Google Sheets API sudah di-**Enable** di Cloud Console.
+### Dashboard → Vercel
+1. Push repo ke GitHub (pastikan **private**)
+2. Buka [vercel.com](https://vercel.com) → Import project
+3. Set Root Directory: `dashboard`
+4. Tambahkan environment variable: `VITE_API_URL`
+5. Deploy!
+
+### Bot & Backend → Railway / VPS
+1. Gunakan Docker atau jalankan `node index.js` di server.
+2. Pastikan port `3005` terbuka.
+3. Update Google OAuth Redirect URI di Cloud Console ke URL production kamu.
 
 ---
-*Butuh bantuan? Silakan buka Issue di repository ini.*
+
+## ✅ Checklist
+
+- [x] Google Cloud project dibuat & API diaktifkan
+- [x] Spreadsheet ID sudah disalin ke `.env`
+- [x] Telegram Bot dibuat & token disalin
+- [x] (Opsional) Gemini API key sudah dimasukkan
+- [x] `GOOGLE_TOKEN` sudah digenerate & masuk ke `.env`
+- [x] Bot bisa menerima pesan Telegram
+- [x] Dashboard bisa dibuka di browser
+
+---
+
+## ❓ Troubleshooting
+
+**Bot tidak merespons:**
+- Cek `TELEGRAM_ALLOWED_CHAT_ID` sudah benar (angka saja).
+- Pastikan bot token valid.
+
+**Error Google Sheets (403/404):**
+- Pastikan Google Sheets API sudah di-**ENABLE** di Google Cloud Console.
+- Cek Spreadsheet ID benar.
+
+**Parser Salah Baca Angka:**
+- Gunakan format standar: `angka` (25000), `k/rb` (25k/25rb), atau `jt` (1.5jt).
+- Hindari simbol mata uang seperti `Rp` di depan angka jika menggunakan Regex murni.

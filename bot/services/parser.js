@@ -110,6 +110,45 @@ Jika pesan bukan transaksi, kembalikan: null
   }
 }
 
+// ── Gemini Vision Parser (Untuk Struk/Foto) ─────────────────
+export async function parseStruk(imageBuffer, mimeType) {
+  const prompt = `
+Kamu adalah parser struk belanja. Ekstrak data dari struk ini dan kembalikan JSON.
+Cari total belanja (nominal), kategori yang paling cocok, dan nama toko (catatan).
+
+Kategori pengeluaran: ${KATEGORI_PENGELUARAN.map(k => k.id).join(", ")}
+
+Kembalikan HANYA JSON:
+{
+  "tipe": "pengeluaran",
+  "nominal": number,
+  "kategori": string (id kategori),
+  "catatan": string (nama toko/item utama)
+}
+`;
+
+  try {
+    const result = await model.generateContent([
+      { text: prompt },
+      {
+        inlineData: {
+          data: imageBuffer.toString("base64"),
+          mimeType
+        }
+      }
+    ]);
+    const response = await result.response;
+    let raw = response.text().trim();
+    raw = raw.replace(/```json|```/g, "").trim();
+    
+    const parsed = JSON.parse(raw);
+    return enrichResult(parsed);
+  } catch (err) {
+    console.error("Gemini Vision Error:", err.message);
+    return null;
+  }
+}
+
 // ── Main Export ───────────────────────────────────────────────
 export async function parseTransaksi(teks) {
   // 1. Coba Regex dulu (Cepat & Gratis)
