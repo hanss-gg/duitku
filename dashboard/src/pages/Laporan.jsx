@@ -13,67 +13,96 @@ export default function Laporan() {
   const surplus = (laporan?.saldo ?? 0) >= 0;
 
   return (
-    <div className="space-y-5">
-      <h2 className="text-xl font-bold" style={{ fontFamily: "var(--font-display)" }}>Laporan</h2>
+    <div className="space-y-6 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <h2 className="text-2xl font-bold tracking-tight text-white">Laporan</h2>
 
-      <input
-        type="month"
-        value={bulan}
-        onChange={e => setBulan(e.target.value)}
-        className="w-full card px-4 py-2 text-slate-300 bg-transparent outline-none"
-      />
+      <div className="card p-2">
+        <input
+          type="month"
+          value={bulan}
+          onChange={e => setBulan(e.target.value)}
+          className="w-full bg-transparent text-white font-medium outline-none px-2 appearance-none color-scheme-dark"
+          style={{ colorScheme: "dark" }}
+        />
+      </div>
 
       {loading ? (
-        <div className="space-y-3 animate-pulse">
-          {[...Array(4)].map((_, i) => <div key={i} className="h-20 bg-slate-800 rounded-2xl" />)}
+        <div className="space-y-4 animate-pulse">
+          <div className="h-32 card border-white/5" />
+          <div className="grid grid-cols-2 gap-3">
+             <div className="h-24 card border-white/5" />
+             <div className="h-24 card border-white/5" />
+          </div>
+          <div className="h-64 card border-white/5" />
         </div>
       ) : !laporan ? (
-        <div className="text-center text-slate-500 py-16">
-          <p className="text-4xl mb-3">📊</p>
-          <p>Tidak ada data bulan ini</p>
+        <div className="card p-12 border-dashed flex flex-col items-center justify-center text-center opacity-70 mt-8">
+          <span className="text-5xl mb-4 grayscale">📊</span>
+          <p className="text-sm font-semibold text-slate-300">Data Kosong</p>
+          <p className="text-xs text-slate-500 mt-1">Tidak ada transaksi untuk dianalisis</p>
         </div>
       ) : (
-        <>
-          {/* Status */}
-          <div className={`card p-5 border ${surplus ? "border-emerald-500/30" : "border-rose-500/30"}`}>
-            <p className="text-xs text-slate-400 mb-1">Status Bulan Ini</p>
-            <p className={`text-rupiah text-3xl ${surplus ? "text-emerald-400" : "text-rose-400"}`}>
+        <div className="space-y-4">
+          {/* Main Status Card */}
+          <div className={`card p-6 relative overflow-hidden group ${surplus ? "border-emerald-500/20 bg-emerald-500/5" : "border-rose-500/20 bg-rose-500/5"}`}>
+            <div className={`absolute -right-8 -bottom-8 w-32 h-32 rounded-full blur-3xl opacity-20 transition-all duration-700 ${surplus ? "bg-emerald-500" : "bg-rose-500"}`} />
+            
+            <div className="flex justify-between items-start mb-2">
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Net Saldo</p>
+              <div className={`px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider ${surplus ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-400"}`}>
+                 {surplus ? "Surplus" : "Defisit"}
+              </div>
+            </div>
+            
+            <p className={`text-rupiah text-4xl mb-1 ${surplus ? "text-emerald-400" : "text-rose-400"}`}>
               {formatRupiah(laporan.saldo)}
             </p>
-            <p className={`text-sm mt-2 font-medium ${surplus ? "text-emerald-400" : "text-rose-400"}`}>
-              {surplus ? "✅ Surplus — Keuangan aman!" : "⚠️ Defisit — Perhatikan pengeluaran"}
+            <p className="text-xs text-slate-500 font-medium">
+              {surplus ? "Keuanganmu sangat sehat bulan ini! 🎉" : "Perhatian: Pengeluaran melebihi pemasukan. ⚠️"}
             </p>
           </div>
 
-          {/* Ringkasan */}
+          {/* Flow Cards */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="card p-4">
-              <p className="text-xs text-slate-400">📈 Total Pemasukan</p>
-              <p className="text-rupiah text-lg text-emerald-400 mt-1">{formatRupiah(laporan.pemasukan)}</p>
+            <div className="card p-4 hover:border-emerald-500/30 transition-colors">
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2 flex items-center gap-1">
+                <span className="text-emerald-400">↓</span> Pemasukan
+              </p>
+              <p className="text-rupiah text-xl text-white">{formatRupiah(laporan.pemasukan)}</p>
             </div>
-            <div className="card p-4">
-              <p className="text-xs text-slate-400">📉 Total Pengeluaran</p>
-              <p className="text-rupiah text-lg text-rose-400 mt-1">{formatRupiah(laporan.pengeluaran)}</p>
+            <div className="card p-4 hover:border-rose-500/30 transition-colors">
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2 flex items-center gap-1">
+                <span className="text-rose-400">↑</span> Pengeluaran
+              </p>
+              <p className="text-rupiah text-xl text-white">{formatRupiah(laporan.pengeluaran)}</p>
             </div>
           </div>
 
-          {/* Top kategori */}
-          <div className="card p-5">
-            <p className="text-sm font-semibold text-slate-300 mb-4">Top Pengeluaran</p>
-            <div className="space-y-3">
+          {/* Top Pengeluaran (Budget Bars) */}
+          <div className="card p-6">
+            <p className="text-sm font-bold text-slate-200 mb-5">Distribusi Pengeluaran</p>
+            <div className="space-y-4">
               {laporan.topKategori.map((k, i) => {
-                const pct = laporan.pengeluaran > 0
-                  ? Math.round((k.total / laporan.pengeluaran) * 100) : 0;
+                const pct = laporan.pengeluaran > 0 ? Math.round((k.total / laporan.pengeluaran) * 100) : 0;
+                // Alternate bar colors
+                const barColor = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"][i % 5];
+                
                 return (
-                  <div key={k.id}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>{k.emoji} {k.label}</span>
-                      <span className="text-slate-400">{formatRupiah(k.total)} ({pct}%)</span>
+                  <div key={k.id} className="group">
+                    <div className="flex justify-between items-center text-sm mb-1.5">
+                      <span className="font-medium text-slate-300 flex items-center gap-2">
+                        <span className="w-6 h-6 rounded bg-white/5 flex items-center justify-center text-xs">{k.emoji}</span>
+                        {k.label}
+                      </span>
+                      <div className="text-right">
+                        <p className="text-white font-bold">{formatRupiah(k.total)}</p>
+                        <p className="text-[10px] text-slate-500 font-semibold">{pct}% dari total</p>
+                      </div>
                     </div>
-                    <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                    <div className="h-2 bg-slate-800/50 rounded-full overflow-hidden border border-white/5">
                       <div
-                        className="h-full bg-indigo-500 rounded-full transition-all"
-                        style={{ width: `${pct}%` }}
+                        className="h-full rounded-full transition-all duration-1000 ease-out group-hover:brightness-125"
+                        style={{ width: `${pct}%`, backgroundColor: barColor }}
                       />
                     </div>
                   </div>
@@ -81,17 +110,7 @@ export default function Laporan() {
               })}
             </div>
           </div>
-
-          {/* Perbandingan bulan lalu */}
-          {laporan.vsBulanLalu != null && (
-            <div className="card p-4">
-              <p className="text-xs text-slate-400">vs Bulan Lalu</p>
-              <p className={`text-sm font-semibold mt-1 ${laporan.vsBulanLalu <= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                {laporan.vsBulanLalu > 0 ? "+" : ""}{laporan.vsBulanLalu}% pengeluaran
-              </p>
-            </div>
-          )}
-        </>
+        </div>
       )}
     </div>
   );
