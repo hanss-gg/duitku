@@ -1,32 +1,61 @@
 // dashboard/src/components/BarChart.jsx
 import { Bar } from "react-chartjs-2";
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip } from "chart.js";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Tooltip,
+} from "chart.js";
+
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
 export default function BarChart({ data }) {
-  return (
-    <Bar
-      data={{
-        labels: data.map(d => d.label),
-        datasets: [{
-          label: "Pengeluaran",
-          data: data.map(d => d.pengeluaran),
-          backgroundColor: "rgba(239,68,68,0.7)",
-          borderRadius: 6,
-        }, {
-          label: "Pemasukan",
-          data: data.map(d => d.pemasukan),
-          backgroundColor: "rgba(16,185,129,0.7)",
-          borderRadius: 6,
-        }],
-      }}
-      options={{
-        plugins: { legend: { labels: { color: "#94a3b8", font: { size: 11 } } } },
-        scales: {
-          x: { ticks: { color: "#64748b" }, grid: { display: false } },
-          y: { ticks: { color: "#64748b" }, grid: { color: "rgba(255,255,255,0.04)" } },
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: "rgba(15, 23, 42, 0.9)",
+        padding: 10,
+        displayColors: false,
+        callbacks: {
+          label: (ctx) => `Rp ${ctx.parsed.y.toLocaleString("id-ID")}`,
         },
-      }}
-    />
-  );
+      },
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { color: "#64748b", font: { size: 10, weight: "bold" } },
+      },
+      y: {
+        display: false,
+        grid: { display: false },
+      },
+    },
+  };
+
+  const chartData = {
+    labels: data.map((d) => d.label),
+    datasets: [
+      {
+        label: "Pengeluaran",
+        data: data.map((d) => d.pengeluaran),
+        backgroundColor: (context) => {
+          const ctx = context.chart.ctx;
+          const gradient = ctx.createLinearGradient(0, 0, 0, 160);
+          gradient.addColorStop(0, "#f43f5e"); // rose-500
+          gradient.addColorStop(1, "rgba(244, 63, 94, 0.3)");
+          return gradient;
+        },
+        borderRadius: 8,
+        borderSkipped: false,
+        barPercentage: 0.6,
+      },
+    ],
+  };
+
+  return <Bar data={chartData} options={options} />;
 }

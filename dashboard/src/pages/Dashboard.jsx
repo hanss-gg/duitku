@@ -1,12 +1,15 @@
 // dashboard/src/pages/Dashboard.jsx
+import { useState } from "react";
 import { useData } from "../hooks/useData.js";
 import { formatRupiah } from "../utils/formatter.js";
 import DonatChart from "../components/DonatChart.jsx";
-import TrendChart from "../components/TrendChart.jsx"; // Renamed from BarChart
+import TrendChart from "../components/TrendChart.jsx";
+import BarChart from "../components/BarChart.jsx";
 import TransaksiItem from "../components/TransaksiItem.jsx";
 
 export default function Dashboard({ onTambah, onNav }) {
   const { ringkasan, transaksiTerbaru, loading } = useData();
+  const [chartType, setChartType] = useState("trend"); // trend | bar
 
   if (loading) return <Skeleton />;
 
@@ -103,10 +106,34 @@ export default function Dashboard({ onTambah, onNav }) {
         <div className="card p-5 bg-gradient-to-b from-slate-900/50 to-transparent">
           <div className="flex justify-between items-center mb-4">
             <p className="text-sm font-bold text-slate-200">Aktivitas Mingguan</p>
-            <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Bulan Ini</p>
+            
+            {/* Chart Toggle Switch */}
+            <div className="flex bg-slate-800/80 p-0.5 rounded-lg border border-white/5">
+              <button 
+                onClick={() => setChartType("bar")}
+                className={`px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider transition-all ${
+                  chartType === "bar" ? "bg-slate-700 text-white shadow-sm" : "text-slate-500 hover:text-slate-300"
+                }`}
+              >
+                Bar
+              </button>
+              <button 
+                onClick={() => setChartType("trend")}
+                className={`px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider transition-all ${
+                  chartType === "trend" ? "bg-slate-700 text-white shadow-sm" : "text-slate-500 hover:text-slate-300"
+                }`}
+              >
+                Trend
+              </button>
+            </div>
           </div>
-          <div className="h-44 -mx-2">
-            <TrendChart data={ringkasan.perMinggu} />
+          
+          <div className="h-44 -mx-2 transition-all duration-500">
+            {chartType === "trend" ? (
+              <TrendChart data={ringkasan.perMinggu} />
+            ) : (
+              <BarChart data={ringkasan.perMinggu} />
+            )}
           </div>
         </div>
       )}
