@@ -2,10 +2,10 @@
 import { useData } from "../hooks/useData.js";
 import { formatRupiah } from "../utils/formatter.js";
 import DonatChart from "../components/DonatChart.jsx";
-import BarChart from "../components/BarChart.jsx";
+import TrendChart from "../components/TrendChart.jsx"; // Renamed from BarChart
 import TransaksiItem from "../components/TransaksiItem.jsx";
 
-export default function Dashboard({ onTambah }) {
+export default function Dashboard({ onTambah, onNav }) {
   const { ringkasan, transaksiTerbaru, loading } = useData();
 
   if (loading) return <Skeleton />;
@@ -63,7 +63,12 @@ export default function Dashboard({ onTambah }) {
         <div className="card p-5 space-y-4">
           <div className="flex justify-between items-center">
             <p className="text-sm font-bold text-slate-200">Alokasi Jajan</p>
-            <p className="text-[10px] text-indigo-400 font-bold uppercase tracking-tighter cursor-pointer hover:underline">Detail →</p>
+            <button 
+              onClick={() => onNav("laporan")}
+              className="text-[10px] text-indigo-400 font-bold uppercase tracking-tighter cursor-pointer hover:underline bg-transparent border-none p-0"
+            >
+              Detail →
+            </button>
           </div>
           
           <div className="flex gap-6 items-center">
@@ -95,10 +100,13 @@ export default function Dashboard({ onTambah }) {
 
       {/* Tren Mingguan */}
       {ringkasan.perMinggu?.length > 0 && (
-        <div className="card p-5">
-          <p className="text-sm font-bold text-slate-200 mb-4">Aktivitas Mingguan</p>
-          <div className="h-40">
-            <BarChart data={ringkasan.perMinggu} />
+        <div className="card p-5 bg-gradient-to-b from-slate-900/50 to-transparent">
+          <div className="flex justify-between items-center mb-4">
+            <p className="text-sm font-bold text-slate-200">Aktivitas Mingguan</p>
+            <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Bulan Ini</p>
+          </div>
+          <div className="h-44 -mx-2">
+            <TrendChart data={ringkasan.perMinggu} />
           </div>
         </div>
       )}
@@ -107,7 +115,12 @@ export default function Dashboard({ onTambah }) {
       <div className="space-y-3">
         <div className="flex justify-between items-center px-1">
           <p className="text-sm font-bold text-slate-200">Riwayat Terakhir</p>
-          <button className="text-[10px] text-slate-500 font-bold uppercase tracking-widest hover:text-indigo-400 transition-colors">Lihat Semua</button>
+          <button 
+            onClick={() => onNav("riwayat")}
+            className="text-[10px] text-slate-500 font-bold uppercase tracking-widest hover:text-indigo-400 transition-colors"
+          >
+            Lihat Semua
+          </button>
         </div>
         <div className="space-y-2.5">
           {transaksiTerbaru.length > 0 ? (

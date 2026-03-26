@@ -23,7 +23,12 @@ export default function App() {
   return (
     <div className="bg-animated min-h-dvh pb-24">
       <div className="max-w-lg mx-auto px-4 pt-6">
-        {halaman === "dashboard"  && <Dashboard onTambah={() => setHalaman("tambah")} />}
+        {halaman === "dashboard"  && (
+          <Dashboard 
+            onTambah={() => setHalaman("tambah")} 
+            onNav={(p) => setHalaman(p)} 
+          />
+        )}
         {halaman === "riwayat"   && <Riwayat />}
         {halaman === "laporan"   && <Laporan />}
         {halaman === "tambah"    && <TambahTransaksi onSelesai={() => setHalaman("dashboard")} />}
