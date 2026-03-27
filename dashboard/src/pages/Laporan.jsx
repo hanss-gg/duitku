@@ -54,7 +54,7 @@ export default function Laporan() {
               </div>
             </div>
             
-            <p className={`text-rupiah text-4xl mb-1 ${surplus ? "text-emerald-400" : "text-rose-400"}`}>
+            <p className={`text-rupiah text-3xl sm:text-4xl mb-1 break-words ${surplus ? "text-emerald-400" : "text-rose-400"}`}>
               {formatRupiah(laporan.saldo)}
             </p>
             <p className="text-xs text-slate-500 font-medium">
@@ -68,13 +68,13 @@ export default function Laporan() {
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2 flex items-center gap-1">
                 <span className="text-emerald-400">↓</span> Pemasukan
               </p>
-              <p className="text-rupiah text-xl text-white">{formatRupiah(laporan.pemasukan)}</p>
+              <p className="text-rupiah text-lg sm:text-xl text-white break-words">{formatRupiah(laporan.pemasukan)}</p>
             </div>
             <div className="card p-4 hover:border-rose-500/30 transition-colors">
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2 flex items-center gap-1">
                 <span className="text-rose-400">↑</span> Pengeluaran
               </p>
-              <p className="text-rupiah text-xl text-white">{formatRupiah(laporan.pengeluaran)}</p>
+              <p className="text-rupiah text-lg sm:text-xl text-white break-words">{formatRupiah(laporan.pengeluaran)}</p>
             </div>
           </div>
 
@@ -89,13 +89,13 @@ export default function Laporan() {
                 
                 return (
                   <div key={k.id} className="group">
-                    <div className="flex justify-between items-center text-sm mb-1.5">
-                      <span className="font-medium text-slate-300 flex items-center gap-2">
-                        <span className="w-6 h-6 rounded bg-white/5 flex items-center justify-center text-xs">{k.emoji}</span>
-                        {k.label}
+                    <div className="flex justify-between items-start text-sm mb-1.5 gap-2">
+                      <span className="font-medium text-slate-300 flex items-center gap-2 min-w-0 flex-1">
+                        <span className="w-6 h-6 rounded bg-white/5 flex-shrink-0 flex items-center justify-center text-xs">{k.emoji}</span>
+                        <span className="truncate">{k.label}</span>
                       </span>
-                      <div className="text-right">
-                        <p className="text-white font-bold">{formatRupiah(k.total)}</p>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-white font-bold break-all leading-tight">{formatRupiah(k.total)}</p>
                         <p className="text-[10px] text-slate-500 font-semibold">{pct}% dari total</p>
                       </div>
                     </div>

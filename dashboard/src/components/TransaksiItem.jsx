@@ -37,8 +37,8 @@ export default function TransaksiItem({ transaksi: t, showDate = false }) {
           )}
         </div>
       </div>
-      <div className="text-right flex-shrink-0">
-        <p className={`text-rupiah text-sm font-black tracking-tight ${isIn ? "text-emerald-400" : "text-rose-400"}`}>
+      <div className="text-right flex-shrink-0 ml-2">
+        <p className={`text-rupiah text-sm font-black tracking-tight break-all leading-tight ${isIn ? "text-emerald-400" : "text-rose-400"}`}>
           {isIn ? "+" : ""}{formatRupiah(t.nominal)}
         </p>
         <p className="text-[9px] text-slate-600 font-bold uppercase tracking-tighter">IDR</p>

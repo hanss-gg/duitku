@@ -48,7 +48,7 @@ export default function Dashboard({ onTambah, onNav }) {
         <div className="col-span-2 card p-6 bg-gradient-to-br from-indigo-600/20 to-transparent border-indigo-500/20 relative overflow-hidden group">
           <div className="absolute -right-4 -top-4 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl group-hover:bg-indigo-500/20 transition-all duration-700" />
           <p className="text-indigo-300/80 text-[10px] font-bold uppercase tracking-widest mb-1">Sisa Uang Jajan</p>
-          <h1 className={`text-4xl font-black transition-colors duration-500 tracking-tighter ${surplus ? "text-emerald-400" : "text-rose-400"}`}>
+          <h1 className={`text-3xl sm:text-4xl font-black transition-colors duration-500 tracking-tighter break-words ${surplus ? "text-emerald-400" : "text-rose-400"}`}>
             {formatRupiah(ringkasan.saldo)}
           </h1>
           <div className="mt-4 flex items-center gap-2">
@@ -64,13 +64,13 @@ export default function Dashboard({ onTambah, onNav }) {
         {/* Small Stats: Pemasukan */}
         <div className="card p-4 bg-emerald-500/5 border-emerald-500/10">
           <p className="text-[9px] text-emerald-500/60 uppercase tracking-widest font-black mb-1">Pemasukan</p>
-          <p className="text-emerald-400 font-bold text-lg truncate">+{formatRupiah(ringkasan.pemasukan)}</p>
+          <p className="text-emerald-400 font-bold text-base sm:text-lg break-words leading-tight">+{formatRupiah(ringkasan.pemasukan)}</p>
         </div>
 
         {/* Small Stats: Pengeluaran */}
         <div className="card p-4 bg-rose-500/5 border-rose-500/10">
           <p className="text-[9px] text-rose-500/60 uppercase tracking-widest font-black mb-1">Pengeluaran</p>
-          <p className="text-rose-400 font-bold text-lg truncate">-{formatRupiah(ringkasan.pengeluaran)}</p>
+          <p className="text-rose-400 font-bold text-base sm:text-lg break-words leading-tight">-{formatRupiah(ringkasan.pengeluaran)}</p>
         </div>
 
         {/* Trend Chart - Large (Full Width) */}
