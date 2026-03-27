@@ -1,14 +1,23 @@
 # 🚀 Panduan Setup Duitku
 
-Ikuti langkah-langkah berikut secara berurutan.
+Ikuti langkah-langkah berikut secara berurutan untuk menjalankan sistem tracker keuangan pribadi kamu.
 
 ---
 
 ## 1. Persiapan Akun
 
-- **Google Cloud Console**: Buat project baru, aktifkan **Google Sheets API** dan **Google Drive API**.
-- **Google OAuth**: Buat Credentials -> OAuth 2.0 Client ID (Web Application).
-- **Spreadsheet**: Buat spreadsheet kosong baru, salin ID-nya dari URL.
+- **Google Cloud Console**: 
+  - Buat project baru.
+  - Aktifkan **Google Sheets API**, **Google Drive API**, dan **Google OAuth2 API**.
+- **Google OAuth**: 
+  - Buat Credentials -> OAuth 2.0 Client ID (Web Application).
+  - Tambahkan Authorized Redirect URIs:
+    - `http://localhost:3001/auth/callback` (Untuk Login Dashboard)
+    - `http://localhost:9999/callback` (Untuk `npm run setup:token`)
+    - Sertakan juga redirect URI production kamu jika ada.
+- **Spreadsheet**: 
+  - Buat spreadsheet kosong baru.
+  - Salin ID-nya dari URL (string panjang antara `/d/` dan `/edit`).
 - **Telegram @BotFather**: Buat bot baru, salin Token-nya.
 - **Google AI Studio**: Buat API Key untuk **Gemini 1.5 Flash**.
 
@@ -22,9 +31,10 @@ Ikuti langkah-langkah berikut secara berurutan.
    ```bash
    cd bot
    npm install
-   node scripts/get-token.js
+   npm run setup:token
    ```
-4. Copy JSON token yang muncul ke variabel `GOOGLE_TOKEN` di file `.env`.
+4. Copy JSON token yang muncul ke variabel `GOOGLE_TOKEN` di file `.env`. 
+   *Catatan: Pastikan token mengandung `refresh_token` agar bot tidak mati setelah 1 jam.*
 
 ---
 
@@ -43,26 +53,44 @@ Untuk Dashboard (di terminal baru):
 ```bash
 cd dashboard
 npm install
+# Buat file .env dengan: VITE_API_URL=http://localhost:3001
 npm run dev
 ```
+Dashboard akan berjalan di `http://localhost:3006`.
 
 ---
 
-## 4. Tips Pemakaian
+## 4. Fitur Baru & Diagnostik
 
-### Sinkronisasi Kategori
-Semua kategori dan kata kunci (keywords) dikelola di `shared/constants.js`. Jika kamu mengubah kategori di file tersebut, Bot dan Dashboard akan otomatis terupdate.
+### Cek Kesehatan Sistem
+Jika bot tidak merespon atau gagal menyimpan data, jalankan script diagnostik:
+```bash
+node bot/scripts/check-env.js
+```
+Script ini akan memeriksa apakah semua variable `.env` sudah benar dan apakah token Google kamu valid (termasuk cek `refresh_token`).
 
-### Fitur OCR (Struk)
-Untuk hasil terbaik, pastikan foto struk terang dan teks terlihat jelas. Gemini 1.5 Flash akan mencoba menebak total belanja dan nama toko.
+### Command Bot Terbaru
+- `/check` — Gunakan ini langsung di Telegram untuk melihat status koneksi Bot ke Google Sheets dan Gemini AI secara real-time.
+- `/arsip` — Gunakan setiap awal bulan untuk memindahkan data bulan lalu ke sheet arsip agar dashboard tetap ringan.
 
-### Arsip Data
-Gunakan command `/arsip` di Telegram setiap awal bulan untuk memindahkan data bulan lalu ke sheet baru (misal: `Arsip_2024_10`). Ini menjaga performa Dashboard tetap cepat.
+### Keamanan Whitelist
+Bot ini menggunakan whitelist Chat ID. Jika akses kamu ditolak, bot akan memberikan nomor Chat ID kamu. Masukkan nomor tersebut ke `TELEGRAM_ALLOWED_CHAT_ID` di file `.env`.
 
 ---
 
-## ✅ Troubleshooting
+## ✅ Troubleshooting Umum
 
-- **Error: GOOGLE_TOKEN invalid**: Pastikan kamu meng-copy seluruh JSON dari output script `get-token.js`.
-- **Bot Tidak Respon**: Cek Chat ID di Telegram (pakai `@userinfobot`), masukkan ke `TELEGRAM_ALLOWED_CHAT_ID` di `.env`.
-- **Modul Tidak Ditemukan**: Jika ada error path, pastikan kamu menjalankan perintah dari root folder atau folder yang benar sesuai panduan.
+- **Error: "No refresh token is set"**: 
+  Ini terjadi jika kamu re-auth tanpa menghapus akses aplikasi sebelumnya.
+  1. Pergi ke [Google Account Connections](https://myaccount.google.com/connections).
+  2. Hapus/Disconnect aplikasi "Duitku".
+  3. Jalankan ulang `npm run setup:token` di bot.
+- **Bot Error: "SyntaxError"**: 
+  Pastikan kamu menggunakan Node.js versi terbaru (>= 20.0.0) karena project ini menggunakan ES Modules.
+- **Dashboard Tidak Update**: 
+  Pastikan `GOOGLE_SHEETS_ID` di `.env` sudah benar. Dashboard membaca data langsung dari sheet melalui backend server.
+
+---
+
+## 🛠️ Pemeliharaan Data
+Data disimpan di Google Sheets dalam sheet bernama **"Transaksi"**. Jangan mengubah nama kolom atau urutan kolom (ID, Tanggal, Tipe, Nominal, Kategori, Catatan, Sumber) agar sistem tidak error. Kamu bisa mengedit nominal atau catatan secara manual langsung di spreadsheet jika ada kesalahan input.

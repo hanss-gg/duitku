@@ -2,7 +2,7 @@
 
 > Catat pengeluaran lewat Telegram, pantau keuangan lewat dashboard web "Glassmorphism" yang modern.
 
-![Version](https://img.shields.io/badge/version-1.1.0-blue)
+![Version](https://img.shields.io/badge/version-1.2.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Status](https://img.shields.io/badge/status-active-brightgreen)
 
@@ -10,10 +10,11 @@
 
 ## ✨ Fitur Utama
 
-- 🤖 **Telegram Bot (Hybrid Parser)** — input transaksi dengan pesan natural. Menggunakan kombinasi Regex (cepat & gratis) + Gemini AI (pintar) untuk akurasi maksimal.
+- 🤖 **Telegram Bot (Smart Hybrid Parser)** — input transaksi dengan pesan natural. Menggunakan kombinasi Regex (dengan Word Boundaries) + Gemini AI untuk akurasi maksimal.
 - 📸 **OCR Struk (Gemini Vision)** — cukup foto struk belanja, bot akan otomatis mencatat nominal, toko, dan kategorinya.
-- 📊 **Dashboard "Glassmorphism 2.0"** — visualisasi keuangan dengan desain kaca transparan yang modern, mewah, dan responsif.
-- 📈 **Trend & Bar Toggle** — pantau pengeluaran mingguan dengan grafik garis (smooth trend) atau grafik batang sesuai selera.
+- 📊 **Bento-Style Dashboard** — visualisasi keuangan dengan layout Bento Grid yang terorganisir dan modern.
+- 🌫️ **Glassmorphism 2.0 & Mesh Gradients** — desain dashboard mewah dengan efek kaca transparan dan latar belakang mesh gradient yang dinamis.
+- 📈 **Interactive Charts** — grafik pengeluaran mingguan dengan smooth curves, custom glass tooltips, dan toggle Bar/Trend.
 - ☁️ **Google Sheets Database** — data disimpan di spreadsheet pribadi kamu, gratis selamanya dan mudah diedit manual.
 - 🔐 **Keamanan Maksimal** — login dashboard via Google OAuth & whitelist Chat ID untuk akses Bot.
 
@@ -34,7 +35,8 @@ kopi 18k                 → bot mengerti "18k" = Rp18.000
 - `/laporan` — laporan kategori detail
 - `/riwayat` — 10 transaksi terakhir
 - `/hapus` — hapus transaksi terakhir jika salah input
-- `/arsip` — pindahkan data bulan lalu ke sheet arsip agar tetap ringan
+- `/arsip` — pindahkan data bulan lama ke sheet arsip agar tetap ringan
+- `/check` — cek status koneksi bot ke Google Sheets & Gemini AI
 
 ---
 
@@ -58,13 +60,14 @@ Web Dashboard (React) ──────────→  Google Sheets API
 duitku/
 ├── dashboard/          # Frontend React + Vite (Tailwind CSS)
 │   └── src/
-│       ├── components/ # Chart, Navbar, Items (Glassmorphism UI)
+│       ├── components/ # Chart, Navbar, Items (Bento UI)
 │       └── pages/      # Dashboard, Riwayat, Laporan, Input
 ├── bot/                # Telegram Bot (Telegraf.js)
-│   ├── services/       # Parser (Regex+Gemini), Sheets API
-│   └── handlers/       # Command & Message logic
+│   ├── services/       # Parser (Strict Regex+Gemini), Sheets API
+│   ├── handlers/       # Command, Message, Photo & Callback logic
+│   └── scripts/        # Setup & Diagnostic scripts
 ├── shared/             # Keywords & Kategori (Sync antara Bot & Web)
-└── docs/               # Panduan Setup
+└── docs/               # Panduan Setup & Troubleshooting
 ```
 
 ---
@@ -80,8 +83,8 @@ Lihat panduan lengkap di [`docs/SETUP.md`](docs/SETUP.md)
 | Bagian | Teknologi |
 |---|---|
 | Dashboard | React 18 + Vite |
-| Styling | Tailwind CSS (Glassmorphism 2.0) |
-| Grafik | Chart.js 4 |
+| Styling | Tailwind CSS (Glassmorphism + Mesh Gradients) |
+| Grafik | Chart.js 4 + React-Chartjs-2 |
 | Bot | Node.js + Telegraf |
 | AI / OCR | Gemini 1.5 Flash (Google AI SDK) |
 | Database | Google Sheets API v4 |

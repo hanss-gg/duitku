@@ -16,6 +16,8 @@ export function registerCommands(bot) {
     `/laporan — laporan bulan ini\n` +
     `/riwayat — 10 transaksi terakhir\n` +
     `/hapus — hapus transaksi terakhir\n` +
+    `/arsip — pindahkan data lama ke arsip\n` +
+    `/check — cek status koneksi bot\n` +
     `/help — bantuan`,
     { parse_mode: "Markdown" }
   ));
@@ -32,7 +34,9 @@ export function registerCommands(bot) {
     `/saldo — saldo & ringkasan bulan ini\n` +
     `/laporan — laporan detail bulan ini\n` +
     `/riwayat — 10 transaksi terakhir\n` +
-    `/hapus — hapus transaksi terakhir`,
+    `/hapus — hapus transaksi terakhir\n` +
+    `/arsip — pindahkan data lama ke arsip\n` +
+    `/check — cek status koneksi bot`,
     { parse_mode: "Markdown" }
   ));
 
@@ -135,6 +139,31 @@ export function registerCommands(bot) {
     } catch (err) {
       console.error("Arsip command error:", err);
       ctx.reply("❌ Gagal melakukan pengarsipan.");
+    }
+  });
+
+  // /check — status bot
+  bot.command("check", async (ctx) => {
+    try {
+      await ctx.sendChatAction("typing");
+      // Coba ambil saldo terkecil sebagai cek koneksi
+      await getSaldo();
+      await ctx.reply(
+        `✅ *Bot Status: ONLINE*\n\n` +
+        `🌐 *Google Sheets:* Terhubung\n` +
+        `🧠 *Gemini AI:* ${process.env.GEMINI_API_KEY ? "Aktif" : "Non-aktif"}\n` +
+        `👤 *Chat ID:* \`${ctx.from.id}\` (Terdaftar)`,
+        { parse_mode: "Markdown" }
+      );
+    } catch (err) {
+      console.error("Check status error:", err);
+      await ctx.reply(
+        `❌ *Bot Status: MASALAH*\n\n` +
+        `⚠️ Gagal terhubung ke Google Sheets.\n\n` +
+        `Pesan error: \`${err.message}\`\n\n` +
+        `💡 Tips: Periksa file \`.env\` atau jalankan ulang \`npm run setup:token\`.`,
+        { parse_mode: "Markdown" }
+      );
     }
   });
 }

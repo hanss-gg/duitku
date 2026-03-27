@@ -33,22 +33,26 @@ pastikanSheetSiap()
   .catch((err) => {
     console.error("❌ GAGAL menghubungkan ke Google Sheets:", err.message);
   });
-
 // ── Middleware ────────────────────────────────────────────────
 app.use(express.json());
+
+const isProd = process.env.NODE_ENV === "production";
+const allowedOrigin = process.env.DASHBOARD_URL?.replace(/\/$/, "") || "http://localhost:3006";
+
 app.use(cors({
-  origin: process.env.DASHBOARD_URL || "http://localhost:3006",
+  origin: [allowedOrigin, "http://localhost:3006"], 
   credentials: true,
 }));
+
 app.use(session({
-  secret: process.env.SESSION_SECRET,
+  secret: process.env.SESSION_SECRET || "duitku-fallback-secret-123",
   resave: false,
   saveUninitialized: false,
-  proxy: true, // Beritahu express-session kita di balik proxy Railway
+  proxy: true, // Railway uses proxy
   cookie: {
-    secure: true, // WAJIB untuk sameSite: 'none'
+    secure: isProd, 
     httpOnly: true,
-    sameSite: "none", // Izinkan cross-site cookie dari Vercel ke Railway
+    sameSite: isProd ? "none" : "lax", 
     maxAge: 7 * 24 * 60 * 60 * 1000,
   },
 }));

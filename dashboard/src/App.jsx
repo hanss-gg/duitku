@@ -21,8 +21,12 @@ export default function App() {
   if (!user) return <LoginPage />;
 
   return (
-    <div className="bg-animated min-h-dvh pb-24">
-      <div className="max-w-lg mx-auto px-4 pt-6">
+    <div className="bg-animated min-h-dvh pb-24 relative overflow-hidden">
+      {/* Mesh Gradient Blobs */}
+      <div className="fixed -top-[10%] -left-[10%] w-[60%] h-[60%] bg-indigo-600/10 rounded-full blur-[120px] animate-float opacity-50 z-0 pointer-events-none" />
+      <div className="fixed -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-emerald-500/10 rounded-full blur-[100px] animate-float opacity-40 z-0 pointer-events-none" style={{ animationDelay: "-3s" }} />
+      
+      <div className="max-w-lg mx-auto px-4 pt-6 relative z-10">
         {halaman === "dashboard"  && (
           <Dashboard 
             onTambah={() => setHalaman("tambah")} 

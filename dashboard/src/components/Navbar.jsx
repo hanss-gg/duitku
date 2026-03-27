@@ -7,7 +7,7 @@ export default function Navbar({ aktif, onChange }) {
   ];
 
   return (
-    <div className="fixed bottom-6 left-0 right-0 px-6 z-50">
+    <div className="fixed bottom-6 left-0 right-0 px-6 z-50 pb-[env(safe-area-inset-bottom,0)]">
       <nav className="max-w-xs mx-auto glass-pill p-2 flex items-center justify-between relative overflow-hidden">
         {/* Active Indicator Background */}
         <div 

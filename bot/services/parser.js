@@ -5,7 +5,7 @@ import path from "path";
 import dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { KATEGORI_PENGELUARAN, KATEGORI_PEMASUKAN } from "../shared/constants.js";
+import { KATEGORI_PENGELUARAN, KATEGORI_PEMASUKAN } from "../../shared/constants.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
@@ -36,37 +36,40 @@ function parseDenganRegex(teks) {
     if (u === "jt" || u === "juta") nominal *= 1000000;
   }
   
-  // 2. Determine Type (Pemasukan vs Pengeluaran)
-  // Check keywords from shared/constants.js for income
-  const isPemasukan = KATEGORI_PEMASUKAN.some(cat => 
-    cat.keywords?.some(kw => clean.includes(kw)) || clean.includes(cat.id)
-  );
-  const tipe = isPemasukan ? "pemasukan" : "pengeluaran";
-  
-  // 3. Determine Category
-  const daftarKategori = SEMUA_KATEGORI[tipe];
-  let kategori = "lainnya";
-  let foundCategory = null;
+  // Helper function for strict matching
+  const containsWord = (source, word) => {
+    const regex = new RegExp(`\\b${word}\\b`, "i");
+    return regex.test(source);
+  };
 
-  // Try to find specific category match
+  // 2. Determine Type (Pemasukan vs Pengeluaran)
+  const matchesPemasukan = KATEGORI_PEMASUKAN.filter(cat => 
+    cat.keywords?.some(kw => containsWord(clean, kw)) || containsWord(clean, cat.id)
+  );
+  const tipe = matchesPemasukan.length > 0 ? "pemasukan" : "pengeluaran";
+  
+  // 3. Determine Category (Check for ambiguity)
+  const daftarKategori = SEMUA_KATEGORI[tipe];
+  const matchedCategories = [];
+
   for (const k of daftarKategori) {
-    if (k.keywords?.some(kw => clean.includes(kw)) || clean.includes(k.id)) {
-      foundCategory = k;
-      break;
+    if (k.keywords?.some(kw => containsWord(clean, kw)) || containsWord(clean, k.id)) {
+      matchedCategories.push(k);
     }
   }
 
-  if (foundCategory) {
-    kategori = foundCategory.id;
+  let kategori = "lainnya";
+  let isAmbiguous = matchedCategories.length > 1;
+
+  if (matchedCategories.length === 1) {
+    kategori = matchedCategories[0].id;
+  } else if (matchedCategories.length > 1) {
+    // If multiple categories match, pick the first one but mark as ambiguous
+    kategori = matchedCategories[0].id;
   }
 
-  // 4. Clean up Note (remove nominal and keywords)
+  // 4. Clean up Note (remove nominal)
   let catatan = clean.replace(full, "").trim();
-  if (foundCategory && foundCategory.keywords) {
-    foundCategory.keywords.forEach(kw => {
-      catatan = catatan.replace(kw, "");
-    });
-  }
   catatan = catatan.replace(/\s+/g, " ").trim();
 
   return {
@@ -74,6 +77,7 @@ function parseDenganRegex(teks) {
     nominal,
     kategori,
     catatan: catatan || clean,
+    isAmbiguous
   };
 }
 
@@ -135,11 +139,13 @@ Balas HANYA JSON:
 export async function parseTransaksi(teks) {
   // 1. Regex Match (Fast)
   const regexResult = parseDenganRegex(teks);
-  if (regexResult && regexResult.kategori !== "lainnya") {
+  
+  // If it's a clear, non-ambiguous match (not "lainnya" and not ambiguous), use it.
+  if (regexResult && regexResult.kategori !== "lainnya" && !regexResult.isAmbiguous) {
     return enrichResult(regexResult);
   }
 
-  // 2. Gemini Fallback
+  // 2. Gemini Fallback (For ambiguous matches or "lainnya")
   const geminiResult = await parseDenganGemini(teks);
   if (geminiResult) return enrichResult(geminiResult);
 

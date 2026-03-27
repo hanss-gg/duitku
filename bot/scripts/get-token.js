@@ -56,7 +56,7 @@ const server = http.createServer(async (req, res) => {
 
     console.log("✅ Token berhasil didapat!\n");
     console.log("Salin nilai berikut ke file .env sebagai GOOGLE_TOKEN:\n");
-    console.log("GOOGLE_TOKEN=" + JSON.stringify(JSON.stringify(tokens)));
+    console.log("GOOGLE_TOKEN=" + JSON.stringify(tokens));
     console.log("\nAtau dalam format JSON:\n");
     console.log(JSON.stringify(tokens, null, 2));
 

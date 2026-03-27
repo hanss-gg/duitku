@@ -11,7 +11,7 @@ export default defineConfig({
   resolve: {
     alias: {
       // Import dari shared lokal untuk compatibility deployment
-      "@shared": path.resolve(__dirname, "src/shared"),
+      "@shared": path.resolve(__dirname, "../shared"),
     },
   },
   server: {

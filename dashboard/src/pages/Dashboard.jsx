@@ -24,12 +24,12 @@ export default function Dashboard({ onTambah, onNav }) {
   else if (hour < 19) { greeting = "Selamat Sore"; icon = "🌆"; }
 
   return (
-    <div className="space-y-6 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-6 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header & Greeting */}
-      <div className="flex justify-between items-start">
+      <div className="flex justify-between items-start px-1">
         <div>
-          <p className="text-slate-400 text-sm font-medium flex items-center gap-2">
-            {icon} {greeting}
+          <p className="text-slate-400 text-[10px] uppercase tracking-widest font-bold flex items-center gap-1.5">
+            <span className="text-sm">{icon}</span> {greeting}
           </p>
           <h2 className="text-slate-100 text-xl font-bold mt-0.5">Hai, Harold! 👋</h2>
         </div>
@@ -41,104 +41,90 @@ export default function Dashboard({ onTambah, onNav }) {
         </div>
       </div>
 
-      {/* Main Balance Card */}
-      <div className="card p-6 bg-gradient-to-br from-indigo-600/20 to-transparent border-indigo-500/20 relative overflow-hidden group">
-        <div className="absolute -right-4 -top-4 w-24 h-24 bg-indigo-500/10 rounded-full blur-3xl group-hover:bg-indigo-500/20 transition-all duration-700" />
-        <p className="text-indigo-300/80 text-xs font-bold uppercase tracking-widest mb-1">Total Saldo</p>
-        <h1 className={`text-rupiah text-4xl mb-4 transition-colors duration-500 ${surplus ? "text-emerald-400" : "text-rose-400"}`}>
-          {formatRupiah(ringkasan.saldo)}
-        </h1>
+      {/* Bento Grid */}
+      <div className="grid grid-cols-2 gap-4">
         
-        <div className="grid grid-cols-2 gap-4 border-t border-white/5 pt-4">
-          <div>
-            <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Pemasukan</p>
-            <p className="text-emerald-400 font-bold text-sm">+{formatRupiah(ringkasan.pemasukan)}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Pengeluaran</p>
-            <p className="text-rose-400 font-bold text-sm">-{formatRupiah(ringkasan.pengeluaran)}</p>
+        {/* Total Balance - Large (Full Width) */}
+        <div className="col-span-2 card p-6 bg-gradient-to-br from-indigo-600/20 to-transparent border-indigo-500/20 relative overflow-hidden group">
+          <div className="absolute -right-4 -top-4 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl group-hover:bg-indigo-500/20 transition-all duration-700" />
+          <p className="text-indigo-300/80 text-[10px] font-bold uppercase tracking-widest mb-1">Sisa Uang Jajan</p>
+          <h1 className={`text-4xl font-black transition-colors duration-500 tracking-tighter ${surplus ? "text-emerald-400" : "text-rose-400"}`}>
+            {formatRupiah(ringkasan.saldo)}
+          </h1>
+          <div className="mt-4 flex items-center gap-2">
+            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${surplus ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-400"}`}>
+              {surplus ? "Aman" : "Defisit"}
+            </span>
+            <p className="text-slate-500 text-[10px] font-medium italic">
+              *Tersisa {(30 - new Date().getDate())} hari lagi
+            </p>
           </div>
         </div>
+
+        {/* Small Stats: Pemasukan */}
+        <div className="card p-4 bg-emerald-500/5 border-emerald-500/10">
+          <p className="text-[9px] text-emerald-500/60 uppercase tracking-widest font-black mb-1">Pemasukan</p>
+          <p className="text-emerald-400 font-bold text-lg truncate">+{formatRupiah(ringkasan.pemasukan)}</p>
+        </div>
+
+        {/* Small Stats: Pengeluaran */}
+        <div className="card p-4 bg-rose-500/5 border-rose-500/10">
+          <p className="text-[9px] text-rose-500/60 uppercase tracking-widest font-black mb-1">Pengeluaran</p>
+          <p className="text-rose-400 font-bold text-lg truncate">-{formatRupiah(ringkasan.pengeluaran)}</p>
+        </div>
+
+        {/* Trend Chart - Large (Full Width) */}
+        {ringkasan.perMinggu?.length > 0 && (
+          <div className="col-span-2 card p-5 bg-gradient-to-b from-slate-900/50 to-transparent">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <p className="text-xs font-bold text-slate-200 uppercase tracking-wide">Tren Aktivitas</p>
+                <p className="text-[10px] text-slate-500">Bulan ini vs Bulan lalu</p>
+              </div>
+              
+              <div className="flex bg-slate-800/80 p-0.5 rounded-lg border border-white/5">
+                <button onClick={() => setChartType("bar")} className={`px-2 py-1 rounded-md text-[9px] font-bold uppercase transition-all ${chartType === "bar" ? "bg-slate-700 text-white" : "text-slate-500 hover:text-slate-300"}`}>Bar</button>
+                <button onClick={() => setChartType("trend")} className={`px-2 py-1 rounded-md text-[9px] font-bold uppercase transition-all ${chartType === "trend" ? "bg-slate-700 text-white" : "text-slate-500 hover:text-slate-300"}`}>Trend</button>
+              </div>
+            </div>
+            
+            <div className="h-48 -mx-2">
+              {chartType === "trend" ? <TrendChart data={ringkasan.perMinggu} /> : <BarChart data={ringkasan.perMinggu} />}
+            </div>
+          </div>
+        )}
+
+        {/* Category Breakdown - Half Width (Mobile focus) */}
+        {ringkasan.byKategori?.length > 0 && (
+          <div className="col-span-2 card p-5 space-y-4">
+            <div className="flex justify-between items-center">
+              <p className="text-xs font-bold text-slate-200 uppercase tracking-wide">Alokasi Jajan</p>
+              <button onClick={() => onNav("laporan")} className="text-[10px] text-indigo-400 font-bold uppercase hover:underline">Detail →</button>
+            </div>
+            
+            <div className="flex gap-6 items-center">
+              <div className="w-1/3">
+                 <DonatChart data={ringkasan.byKategori.slice(0, 5)} />
+              </div>
+              <div className="flex-1 space-y-3">
+                {ringkasan.byKategori.slice(0, 3).map((cat, i) => (
+                  <div key={cat.id} className="space-y-1">
+                    <div className="flex justify-between text-[10px] font-bold">
+                      <span className="text-slate-400">{cat.emoji} {cat.label}</span>
+                      <span className="text-slate-200">{Math.round((cat.total / ringkasan.pengeluaran) * 100)}%</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${(cat.total / ringkasan.pengeluaran) * 100}%`, backgroundColor: ["#6366f1", "#10b981", "#f59e0b"][i] }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Visual Budget/Category Breakdown */}
-      {ringkasan.byKategori?.length > 0 && (
-        <div className="card p-5 space-y-4">
-          <div className="flex justify-between items-center">
-            <p className="text-sm font-bold text-slate-200">Alokasi Jajan</p>
-            <button 
-              onClick={() => onNav("laporan")}
-              className="text-[10px] text-indigo-400 font-bold uppercase tracking-tighter cursor-pointer hover:underline bg-transparent border-none p-0"
-            >
-              Detail →
-            </button>
-          </div>
-          
-          <div className="flex gap-6 items-center">
-            <div className="w-1/2">
-               <DonatChart data={ringkasan.byKategori.slice(0, 5)} />
-            </div>
-            <div className="flex-1 space-y-3">
-              {ringkasan.byKategori.slice(0, 3).map((cat, i) => (
-                <div key={cat.id} className="space-y-1">
-                  <div className="flex justify-between text-[10px] font-bold">
-                    <span className="text-slate-400">{cat.emoji} {cat.label}</span>
-                    <span className="text-slate-200">{Math.round((cat.total / ringkasan.pengeluaran) * 100)}%</span>
-                  </div>
-                  <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full rounded-full transition-all duration-1000 ease-out"
-                      style={{ 
-                        width: `${(cat.total / ringkasan.pengeluaran) * 100}%`,
-                        backgroundColor: ["#6366f1", "#10b981", "#f59e0b"][i] 
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Tren Mingguan */}
-      {ringkasan.perMinggu?.length > 0 && (
-        <div className="card p-5 bg-gradient-to-b from-slate-900/50 to-transparent">
-          <div className="flex justify-between items-center mb-4">
-            <p className="text-sm font-bold text-slate-200">Aktivitas Mingguan</p>
-            
-            {/* Chart Toggle Switch */}
-            <div className="flex bg-slate-800/80 p-0.5 rounded-lg border border-white/5">
-              <button 
-                onClick={() => setChartType("bar")}
-                className={`px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider transition-all ${
-                  chartType === "bar" ? "bg-slate-700 text-white shadow-sm" : "text-slate-500 hover:text-slate-300"
-                }`}
-              >
-                Bar
-              </button>
-              <button 
-                onClick={() => setChartType("trend")}
-                className={`px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider transition-all ${
-                  chartType === "trend" ? "bg-slate-700 text-white shadow-sm" : "text-slate-500 hover:text-slate-300"
-                }`}
-              >
-                Trend
-              </button>
-            </div>
-          </div>
-          
-          <div className="h-44 -mx-2 transition-all duration-500">
-            {chartType === "trend" ? (
-              <TrendChart data={ringkasan.perMinggu} />
-            ) : (
-              <BarChart data={ringkasan.perMinggu} />
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Transaksi Terbaru */}
+      {/* Recent Transactions List */}
       <div className="space-y-3">
         <div className="flex justify-between items-center px-1">
           <p className="text-sm font-bold text-slate-200">Riwayat Terakhir</p>

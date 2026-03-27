@@ -4,6 +4,8 @@ import { parseTransaksi, parseStruk } from "../services/parser.js";
 import { simpanTransaksi, getBudgets, getSaldo } from "../services/sheets.js";
 import { formatRupiah } from "../utils/formatter.js";
 
+let isProcessingOCR = false;
+
 export function registerMessageHandler(bot) {
   bot.on("text", async (ctx) => {
     try {
@@ -90,16 +92,28 @@ export function registerMessageHandler(bot) {
 
   // ── Handle Photo (OCR) ──────────────────────────────────────
   bot.on("photo", async (ctx) => {
+    if (isProcessingOCR) {
+      return ctx.reply("⏳ Tunggu sebentar, sedang memproses struk sebelumnya...");
+    }
+
     try {
-      console.log("📷 Menerima foto dari Telegram...");
+      isProcessingOCR = true;
+      // 1. Get photo metadata
+      const photo = ctx.message.photo[ctx.message.photo.length - 1];
+      const fileSizeMB = photo.file_size / (1024 * 1024);
+
+      // 2. Limit file size to 10MB to prevent OOM/Process Crash
+      if (fileSizeMB > 10) {
+        return ctx.reply("⚠️ Ukuran foto terlalu besar (maksimal 10MB). Silakan kirim foto dengan resolusi lebih rendah.");
+      }
+
+      console.log(`📷 Menerima foto: ${fileSizeMB.toFixed(2)} MB`);
       await ctx.reply("⏳ Sedang membaca struk...");
       await ctx.sendChatAction("typing");
 
-      // Ambil foto ukuran terbesar
-      const photo = ctx.message.photo[ctx.message.photo.length - 1];
       const link = await ctx.telegram.getFileLink(photo.file_id);
       
-      console.log("🔗 Mengunduh file dari:", link.href);
+      console.log("🔗 Mengunduh file...");
       const response = await fetch(link.href);
       
       if (!response.ok) {
@@ -153,6 +167,8 @@ export function registerMessageHandler(bot) {
     } catch (err) {
       console.error("OCR Photo error:", err);
       ctx.reply("❌ Terjadi kesalahan saat memproses foto.");
+    } finally {
+      isProcessingOCR = false;
     }
   });
 }
