@@ -10,8 +10,8 @@ Railway akan menjalankan Bot Telegram sekaligus API Server untuk dashboard.
 
 1. **Buat Project Baru** di [Railway](https://railway.app/).
 2. **Hubungkan GitHub** dan pilih repository `duitku`.
-3. **Set Root Directory**: `/bot` (Penting: Railway harus menjalankan folder bot).
-4. **Masukkan Environment Variables**:
+3. **Root Directory**: Biarkan kosong (root project) atau isi `/`. (Ini penting agar bot bisa mengakses folder `shared/`).
+4. **Environment Variables**:
    - `NODE_ENV`: `production`
    - `TELEGRAM_BOT_TOKEN`: (Token dari @BotFather)
    - `TELEGRAM_ALLOWED_CHAT_ID`: (ID kamu)
