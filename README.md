@@ -36,7 +36,6 @@ kopi 18k                 → bot mengerti "18k" = Rp18.000
 - `/saldo` — cek saldo & ringkasan bulan ini
 - `/laporan` — laporan kategori detail
 - `/riwayat` — 10 transaksi terakhir
-- `/list <query>` — cari transaksi tertentu (misal: `/list makan`)
 - `/hapus` — hapus transaksi terakhir jika salah input
 - `/arsip` — pindahkan data bulan lama ke sheet arsip agar tetap ringan
 - `/check` — cek status koneksi bot ke Google Sheets & Gemini AI

@@ -405,32 +405,6 @@ export async function getRiwayat(limit = 10, bulan = null, tokens = null) {
   return rows.slice(-limit).reverse().map(r => rowToTransaksi(r, mapping)).filter(Boolean);
 }
 
-export async function getRiwayatFiltered(query, limit = 10, tokens = null) {
-  const mapping = await getColumnMapping(tokens);
-  const sheets = getSheetsClient(tokens);
-  const spreadsheetId = getSpreadsheetId();
-
-  const res = await sheets.spreadsheets.values.get({
-    spreadsheetId,
-    range: `${SHEET_NAME}!A2:G`,
-  });
-
-  let rows = res.data.values || [];
-  if (!rows.length) return [];
-
-  const q = query.toLowerCase().trim();
-  
-  const filteredRows = rows.filter(row => {
-    const tipe = (row[mapping.TIPE] || "").toLowerCase();
-    const kategori = (row[mapping.KATEGORI] || "").toLowerCase();
-    const catatan = (row[mapping.CATATAN] || "").toLowerCase();
-    
-    return tipe.includes(q) || kategori.includes(q) || catatan.includes(q);
-  });
-
-  return filteredRows.slice(-limit).reverse().map(r => rowToTransaksi(r, mapping)).filter(Boolean);
-}
-
 export async function arsipDataLama(tokens = null) {
   const sheets = getSheetsClient(tokens);
   const mapping = await getColumnMapping(tokens);

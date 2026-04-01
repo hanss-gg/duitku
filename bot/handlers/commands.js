@@ -1,5 +1,5 @@
 // bot/handlers/commands.js
-import { getSaldo, getLaporan, getRiwayat, getRiwayatFiltered, hapusTransaksiTerakhir, arsipDataLama } from "../services/sheets.js";
+import { getSaldo, getLaporan, getRiwayat, hapusTransaksiTerakhir, arsipDataLama } from "../services/sheets.js";
 import { formatRupiah, formatTanggal } from "../utils/formatter.js";
 
 export function registerCommands(bot) {
@@ -15,7 +15,6 @@ export function registerCommands(bot) {
     `/saldo — cek saldo sekarang\n` +
     `/laporan — laporan bulan ini\n` +
     `/riwayat — 10 transaksi terakhir\n` +
-    `/list <query> — cari transaksi tertentu\n` +
     `/hapus — hapus transaksi terakhir\n` +
     `/arsip — pindahkan data lama ke arsip\n` +
     `/check — cek status koneksi bot\n` +
@@ -35,7 +34,6 @@ export function registerCommands(bot) {
     `/saldo — saldo & ringkasan bulan ini\n` +
     `/laporan — laporan detail bulan ini\n` +
     `/riwayat — 10 transaksi terakhir\n` +
-    `/list <query> — cari transaksi (misal: /list makan)\n` +
     `/hapus — hapus transaksi terakhir\n` +
     `/arsip — pindahkan data lama ke arsip\n` +
     `/check — cek status koneksi bot`,
@@ -108,33 +106,6 @@ export function registerCommands(bot) {
     } catch (err) {
       console.error("Riwayat command error:", err);
       ctx.reply("❌ Gagal mengambil riwayat.");
-    }
-  });
-
-  // /list <query>
-  bot.command("list", async (ctx) => {
-    try {
-      const query = ctx.message.text.split(" ").slice(1).join(" ");
-      if (!query) {
-        return ctx.reply("💡 Gunakan format: `/list <nama_kategori_atau_catatan>`\nContoh: `/list makan` atau `/list ojek`", { parse_mode: "Markdown" });
-      }
-
-      await ctx.sendChatAction("typing");
-      const transaksi = await getRiwayatFiltered(query, 15);
-      
-      if (!transaksi || !transaksi.length) {
-        return ctx.reply(`🔍 Tidak ditemukan transaksi untuk: *${query}*`, { parse_mode: "Markdown" });
-      }
-
-      const lines = transaksi.map((t) => {
-        const icon = t.tipe === "pemasukan" ? "📈" : "📉";
-        return `${icon} ${formatTanggal(t.tanggal)} — ${t.kategoriEmoji} ${formatRupiah(t.nominal)}\n   _${t.catatan || t.kategoriLabel}_`;
-      }).join("\n\n");
-
-      await ctx.reply(`🔍 *Hasil Pencarian: ${query}*\n\n${lines}`, { parse_mode: "Markdown" });
-    } catch (err) {
-      console.error("List command error:", err);
-      ctx.reply("❌ Gagal melakukan pencarian transaksi.");
     }
   });
 
