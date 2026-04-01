@@ -77,11 +77,16 @@ function getSpreadsheetId() {
   return id;
 }
 
-// Cache mapping to avoid repeated sheet reads
+// Cache mapping and spreadsheet metadata to avoid repeated sheet reads
 let cachedMapping = null;
+let lastMappingFetch = 0;
+const MAPPING_CACHE_TTL = 1000 * 60 * 60; // 1 hour
 
 async function getColumnMapping(tokens = null) {
-  if (cachedMapping) return cachedMapping;
+  const now = Date.now();
+  if (cachedMapping && (now - lastMappingFetch < MAPPING_CACHE_TTL)) {
+    return cachedMapping;
+  }
   
   const sheets = getSheetsClient(tokens);
   const spreadsheetId = getSpreadsheetId();
@@ -108,6 +113,7 @@ async function getColumnMapping(tokens = null) {
     }
     
     cachedMapping = mapping;
+    lastMappingFetch = now;
     return mapping;
   } catch (err) {
     console.warn("Gagal ambil mapping kolom:", err.message);

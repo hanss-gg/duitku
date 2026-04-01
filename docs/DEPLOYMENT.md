@@ -20,6 +20,7 @@ Railway akan menjalankan Bot Telegram sekaligus API Server untuk dashboard.
    - `GOOGLE_SHEETS_ID`: (ID Spreadsheet)
    - `GOOGLE_TOKEN`: (JSON token hasil `npm run setup:token`)
    - `GEMINI_API_KEY`: (Dari Google AI Studio)
+   - `WEBHOOK_URL`: (URL Railway kamu, contoh: `https://duitku-production.up.railway.app`)
    - `ALLOWED_EMAIL`: (Email Google kamu untuk login dashboard)
    - `SESSION_SECRET`: (Gunakan string acak panjang, misal: `openssl rand -hex 32`)
    - `DASHBOARD_URL`: (URL dari Vercel nanti, contoh: `https://duitku-anda.vercel.app`)

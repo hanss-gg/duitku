@@ -17,6 +17,8 @@
 - 📈 **Interactive Charts** — grafik pengeluaran mingguan dengan smooth curves, custom glass tooltips, dan toggle Bar/Trend.
 - ☁️ **Google Sheets Database** — data disimpan di spreadsheet pribadi kamu, gratis selamanya dan mudah diedit manual.
 - 🔐 **Keamanan Maksimal** — login dashboard via Google OAuth & whitelist Chat ID untuk akses Bot.
+- ⚡ **High Performance** — optimasi Bot dengan request paralel & caching untuk respon instan.
+- 📡 **Webhook Support** — siap untuk dideploy di platform serverless atau cloud production.
 
 ---
 

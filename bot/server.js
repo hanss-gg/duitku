@@ -8,6 +8,7 @@ import express from "express";
 import session from "express-session";
 import { google } from "googleapis";
 import cors from "cors";
+import bot from "./index.js"; // Import the bot instance
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
@@ -21,6 +22,16 @@ import {
 } from "./services/sheets.js";
 
 const app = express();
+
+// ── Webhook Setup (Production Only) ───────────────────────────
+if (process.env.NODE_ENV === "production" && process.env.WEBHOOK_URL) {
+  const secretPath = `/telegraf/${bot.secretPathComponent()}`;
+  bot.telegram.setWebhook(`${process.env.WEBHOOK_URL}${secretPath}`)
+    .then(() => console.log("✅ Webhook established"))
+    .catch(err => console.error("❌ Failed to set webhook:", err));
+  
+  app.use(bot.webhookCallback(secretPath));
+}
 
 // ── Production Proxy Trust ────────────────────────────────────
 if (process.env.NODE_ENV === "production") {

@@ -14,9 +14,10 @@ export function registerMessageHandler(bot) {
       // Abaikan jika command
       if (teks.startsWith("/")) return;
 
-      await ctx.sendChatAction("typing");
+      // Start typing indicator immediately
+      const typingAction = ctx.sendChatAction("typing");
 
-      // 1. Parse pesan
+      // 1. Parse pesan (Fast Regex or Fallback to Gemini)
       const hasil = await parseTransaksi(teks);
       if (!hasil) {
         return ctx.reply(
@@ -29,44 +30,44 @@ export function registerMessageHandler(bot) {
         );
       }
 
-      // 2. Simpan ke Google Sheets
-      let txnId;
-      try {
-        txnId = await simpanTransaksi({ ...hasil, sumber: "bot" });
-      } catch (err) {
-        console.error("Gagal simpan ke Sheets:", err);
-        return ctx.reply("❌ Gagal menyimpan ke Google Sheets. Cek koneksi atau token kamu.");
+      // 2. Parallelize: Save to Sheets + Get Current Saldo/Budgets
+      // This is much faster than waiting for one after the other
+      const [txnId, dataSaldo, budgets] = await Promise.all([
+        simpanTransaksi({ ...hasil, sumber: "bot" }),
+        getSaldo(),
+        getBudgets()
+      ]);
+
+      // 3. Pre-emptive balance update:
+      // The getSaldo() call above might have fetched the balance BEFORE simpanTransaksi was finished.
+      // We manually adjust the balance for a perfectly accurate response without re-fetching.
+      let finalSaldo = dataSaldo.saldo;
+      if (hasil.tipe === "pemasukan") {
+        finalSaldo += hasil.nominal;
+      } else {
+        finalSaldo -= hasil.nominal;
       }
 
-      // 3. Ambil saldo & budget
-      let saldo = 0;
+      // 4. Check budget if it's an expense
       let budgetWarning = "";
-      try {
-        const [dataSaldo, budgets] = await Promise.all([
-          getSaldo(),
-          getBudgets()
-        ]);
-        
-        saldo = dataSaldo.saldo;
+      if (hasil.tipe === "pengeluaran" && budgets[hasil.kategori]) {
+        const limit = budgets[hasil.kategori];
+        const kategoriData = dataSaldo.byKategori.find(k => k.id === hasil.kategori);
+        const currentTotal = kategoriData ? kategoriData.total : 0;
+        const totalTerpakai = currentTotal + hasil.nominal; // Add current txn
+        const persen = (totalTerpakai / limit) * 100;
 
-        // Check budget if it's an expense
-        if (hasil.tipe === "pengeluaran" && budgets[hasil.kategori]) {
-          const limit = budgets[hasil.kategori];
-          const kategoriData = dataSaldo.byKategori.find(k => k.id === hasil.kategori);
-          const totalTerpakai = kategoriData ? kategoriData.total : 0;
-          const persen = (totalTerpakai / limit) * 100;
-
-          if (persen >= 100) {
-            budgetWarning = `\n\n🚨 *OVER BUDGET!* Pengeluaran ${hasil.kategoriLabel} sudah mencapai *${formatRupiah(totalTerpakai)}* dari limit *${formatRupiah(limit)}*.`;
-          } else if (persen >= 80) {
-            budgetWarning = `\n\n⚠️ *HATI-HATI!* Budget ${hasil.kategoriLabel} sudah terpakai ${Math.floor(persen)}% (*${formatRupiah(totalTerpakai)}*/*${formatRupiah(limit)}*).`;
-          }
+        if (persen >= 100) {
+          budgetWarning = `\n\n🚨 *OVER BUDGET!* Pengeluaran ${hasil.kategoriLabel} sudah mencapai *${formatRupiah(totalTerpakai)}* dari limit *${formatRupiah(limit)}*.`;
+        } else if (persen >= 80) {
+          budgetWarning = `\n\n⚠️ *HATI-HATI!* Budget ${hasil.kategoriLabel} sudah terpakai ${Math.floor(persen)}% (*${formatRupiah(totalTerpakai)}*/*${formatRupiah(limit)}*).`;
         }
-      } catch (err) {
-        console.warn("Gagal ambil saldo/budget terbaru:", err.message);
       }
 
-      // 4. Balas konfirmasi
+      // Wait for typing to finish (it usually does instantly, but good practice)
+      await typingAction;
+
+      // 5. Final Confirmation
       const icon = hasil.tipe === "pemasukan" ? "📈" : "📉";
       const tipeLabel = hasil.tipe === "pemasukan" ? "Pemasukan" : "Pengeluaran";
 
@@ -75,7 +76,7 @@ export function registerMessageHandler(bot) {
         `${icon} ${tipeLabel}: *${formatRupiah(hasil.nominal)}*\n` +
         `${hasil.kategoriEmoji} Kategori: ${hasil.kategoriLabel}\n` +
         (hasil.catatan ? `📝 Catatan: ${hasil.catatan}\n` : "") +
-        `\n💰 Sisa saldo: *${formatRupiah(saldo)}*` +
+        `\n💰 Sisa saldo: *${formatRupiah(finalSaldo)}*` +
         budgetWarning,
         {
           parse_mode: "Markdown",

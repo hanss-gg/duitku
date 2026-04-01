@@ -57,8 +57,16 @@ bot.catch((err, ctx) => {
 });
 
 // ── Launch ────────────────────────────────────────────────────
-bot.launch();
-console.log("🤖 Duitku Bot berjalan...");
+if (process.env.NODE_ENV === "production" && process.env.WEBHOOK_URL) {
+  const secretPath = `/telegraf/${bot.secretPathComponent()}`;
+  console.log(`📡 Bot configured for Webhooks: ${process.env.WEBHOOK_URL}${secretPath}`);
+  // We don't launch here, server.js will handle the middleware
+} else {
+  bot.launch();
+  console.log("🤖 Duitku Bot berjalan (Polling Mode)...");
+}
+
+export default bot;
 
 process.once("SIGINT",  () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));
