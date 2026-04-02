@@ -12,7 +12,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const envPath = path.resolve(__dirname, "../.env");
 dotenv.config({ path: envPath });
 
-const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
+const token = process.env.TELEGRAM_BOT_TOKEN;
+if (!token || token.includes("PASTE_HERE")) {
+  console.error("❌ CRITICAL ERROR: TELEGRAM_BOT_TOKEN is missing or invalid in environment variables!");
+  console.log("💡 Fix: Add TELEGRAM_BOT_TOKEN to your Railway/Local environment variables.");
+  process.exit(1);
+}
+
+const bot = new Telegraf(token);
 
 // ── Inisialisasi Database ─────────────────────────────────────
 console.log("⏳ Menghubungkan ke Google Sheets...");

@@ -10,8 +10,11 @@ import { KATEGORI_PENGELUARAN, KATEGORI_PEMASUKAN } from "../../shared/constants
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+const genAI = process.env.GEMINI_API_KEY && !process.env.GEMINI_API_KEY.includes("PASTE") 
+  ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+  : null;
+
+const model = genAI ? genAI.getGenerativeModel({ model: "gemini-1.5-flash" }) : null;
 
 const SEMUA_KATEGORI = {
   pengeluaran: KATEGORI_PENGELUARAN,

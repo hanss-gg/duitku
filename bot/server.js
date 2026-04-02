@@ -47,6 +47,16 @@ pastikanSheetSiap()
 // ── Middleware ────────────────────────────────────────────────
 app.use(express.json());
 
+// ── Root Route ────────────────────────────────────────────────
+app.get("/", (req, res) => {
+  res.json({
+    status: "online",
+    message: "Duitku API is running",
+    version: "1.2.0",
+    bot: process.env.NODE_ENV === "production" ? "webhook" : "polling"
+  });
+});
+
 const isProd = process.env.NODE_ENV === "production";
 const allowedOrigin = process.env.DASHBOARD_URL?.replace(/\/$/, "") || "http://localhost:3006";
 

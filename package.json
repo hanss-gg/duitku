@@ -5,8 +5,18 @@
   "engines": {
     "node": ">=20.0.0"
   },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "concurrently": "^8.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.0",
+    "express": "^4.19.0",
+    "express-session": "^1.18.0",
+    "googleapis": "^140.0.0",
+    "telegraf": "^4.16.0"
+  },
   "scripts": {
-    "postinstall": "cd bot && npm install",
+    "postinstall": "cd bot && npm install --omit=dev",
     "start": "node bot/app.js"
   }
 }
