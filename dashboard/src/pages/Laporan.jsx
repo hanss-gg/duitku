@@ -54,33 +54,37 @@ export default function Laporan() {
               </div>
             </div>
             
-            <p className={`text-rupiah text-3xl sm:text-4xl mb-1 break-words ${surplus ? "text-emerald-400" : "text-rose-400"}`}>
+            <p className={`text-rupiah break-all mb-1 leading-[1.1] ${surplus ? "text-emerald-400" : "text-rose-400"} ${laporan.saldo.toString().length > 10 ? "text-2xl sm:text-3xl" : "text-3xl sm:text-4xl"}`}>
               {formatRupiah(laporan.saldo)}
             </p>
-            <p className="text-xs text-slate-500 font-medium">
+            <p className="text-xs text-slate-500 font-medium truncate">
               {surplus ? "Keuanganmu sangat sehat bulan ini! 🎉" : "Perhatian: Pengeluaran melebihi pemasukan. ⚠️"}
             </p>
           </div>
 
           {/* Flow Cards */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="card p-4 hover:border-emerald-500/30 transition-colors">
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2 flex items-center gap-1">
+          <div className="grid grid-cols-2 gap-3 items-stretch">
+            <div className="card p-4 hover:border-emerald-500/30 transition-colors flex flex-col justify-between">
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2 flex items-center gap-1 flex-shrink-0">
                 <span className="text-emerald-400">↓</span> Pemasukan
               </p>
-              <p className="text-rupiah text-lg sm:text-xl text-white break-words">{formatRupiah(laporan.pemasukan)}</p>
+              <p className={`text-rupiah text-white break-all leading-tight ${laporan.pemasukan.toString().length > 9 ? "text-base" : "text-lg"}`}>
+                {formatRupiah(laporan.pemasukan, laporan.pemasukan.toString().length > 10)}
+              </p>
             </div>
-            <div className="card p-4 hover:border-rose-500/30 transition-colors">
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2 flex items-center gap-1">
+            <div className="card p-4 hover:border-rose-500/30 transition-colors flex flex-col justify-between">
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2 flex items-center gap-1 flex-shrink-0">
                 <span className="text-rose-400">↑</span> Pengeluaran
               </p>
-              <p className="text-rupiah text-lg sm:text-xl text-white break-words">{formatRupiah(laporan.pengeluaran)}</p>
+              <p className={`text-rupiah text-white break-all leading-tight ${laporan.pengeluaran.toString().length > 9 ? "text-base" : "text-lg"}`}>
+                {formatRupiah(laporan.pengeluaran, laporan.pengeluaran.toString().length > 10)}
+              </p>
             </div>
           </div>
 
           {/* Top Pengeluaran (Budget Bars) */}
           <div className="card p-6">
-            <p className="text-sm font-bold text-slate-200 mb-5">Distribusi Pengeluaran</p>
+            <p className="text-sm font-bold text-slate-200 mb-5 uppercase tracking-wider">Distribusi Pengeluaran</p>
             <div className="space-y-4">
               {laporan.topKategori.map((k, i) => {
                 const pct = laporan.pengeluaran > 0 ? Math.round((k.total / laporan.pengeluaran) * 100) : 0;
@@ -89,14 +93,16 @@ export default function Laporan() {
                 
                 return (
                   <div key={k.id} className="group">
-                    <div className="flex justify-between items-start text-sm mb-1.5 gap-2">
+                    <div className="flex justify-between items-start text-sm mb-1.5 gap-3">
                       <span className="font-medium text-slate-300 flex items-center gap-2 min-w-0 flex-1">
-                        <span className="w-6 h-6 rounded bg-white/5 flex-shrink-0 flex items-center justify-center text-xs">{k.emoji}</span>
-                        <span className="truncate">{k.label}</span>
+                        <span className="w-7 h-7 rounded-lg bg-white/5 flex-shrink-0 flex items-center justify-center text-xs">{k.emoji}</span>
+                        <span className="truncate text-xs font-bold tracking-tight">{k.label}</span>
                       </span>
                       <div className="text-right flex-shrink-0">
-                        <p className="text-white font-bold break-all leading-tight">{formatRupiah(k.total)}</p>
-                        <p className="text-[10px] text-slate-500 font-semibold">{pct}% dari total</p>
+                        <p className={`text-white font-black leading-tight tracking-tight text-rupiah ${k.total.toString().length > 9 ? "text-xs" : "text-sm"}`}>
+                          {formatRupiah(k.total, k.total.toString().length > 10)}
+                        </p>
+                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter">{pct}% of total</p>
                       </div>
                     </div>
                     <div className="h-2 bg-slate-800/50 rounded-full overflow-hidden border border-white/5">

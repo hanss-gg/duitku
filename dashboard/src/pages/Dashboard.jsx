@@ -42,13 +42,13 @@ export default function Dashboard({ onTambah, onNav }) {
       </div>
 
       {/* Bento Grid */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 items-stretch">
         
         {/* Total Balance - Large (Full Width) */}
         <div className="col-span-2 card p-6 bg-gradient-to-br from-indigo-600/20 to-transparent border-indigo-500/20 relative overflow-hidden group">
           <div className="absolute -right-4 -top-4 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl group-hover:bg-indigo-500/20 transition-all duration-700" />
           <p className="text-indigo-300/80 text-[10px] font-bold uppercase tracking-widest mb-1">Sisa Uang Jajan</p>
-          <h1 className={`text-3xl sm:text-4xl font-black transition-colors duration-500 tracking-tighter break-words ${surplus ? "text-emerald-400" : "text-rose-400"}`}>
+          <h1 className={`text-rupiah transition-colors duration-500 break-all leading-[1.1] ${surplus ? "text-emerald-400" : "text-rose-400"} ${ringkasan.saldo.toString().length > 10 ? "text-2xl sm:text-3xl" : "text-3xl sm:text-4xl"}`}>
             {formatRupiah(ringkasan.saldo)}
           </h1>
           <div className="mt-4 flex items-center gap-2">
@@ -62,15 +62,15 @@ export default function Dashboard({ onTambah, onNav }) {
         </div>
 
         {/* Small Stats: Pemasukan */}
-        <div className="card p-4 bg-emerald-500/5 border-emerald-500/10">
+        <div className="card p-4 bg-emerald-500/5 border-emerald-500/10 flex flex-col justify-between">
           <p className="text-[9px] text-emerald-500/60 uppercase tracking-widest font-black mb-1">Pemasukan</p>
-          <p className="text-emerald-400 font-bold text-base sm:text-lg break-words leading-tight">+{formatRupiah(ringkasan.pemasukan)}</p>
+          <p className="text-emerald-400 font-bold text-base sm:text-lg break-all leading-tight">+{formatRupiah(ringkasan.pemasukan, true)}</p>
         </div>
 
         {/* Small Stats: Pengeluaran */}
-        <div className="card p-4 bg-rose-500/5 border-rose-500/10">
+        <div className="card p-4 bg-rose-500/5 border-rose-500/10 flex flex-col justify-between">
           <p className="text-[9px] text-rose-500/60 uppercase tracking-widest font-black mb-1">Pengeluaran</p>
-          <p className="text-rose-400 font-bold text-base sm:text-lg break-words leading-tight">-{formatRupiah(ringkasan.pengeluaran)}</p>
+          <p className="text-rose-400 font-bold text-base sm:text-lg break-all leading-tight">-{formatRupiah(ringkasan.pengeluaran, true)}</p>
         </div>
 
         {/* Trend Chart - Large (Full Width) */}
@@ -102,19 +102,19 @@ export default function Dashboard({ onTambah, onNav }) {
               <button onClick={() => onNav("laporan")} className="text-[10px] text-indigo-400 font-bold uppercase hover:underline">Detail →</button>
             </div>
             
-            <div className="flex gap-6 items-center">
-              <div className="w-1/3">
+            <div className="flex gap-4 items-center">
+              <div className="w-1/3 flex-shrink-0">
                  <DonatChart data={ringkasan.byKategori.slice(0, 5)} />
               </div>
-              <div className="flex-1 space-y-3">
+              <div className="flex-1 min-w-0 space-y-3">
                 {ringkasan.byKategori.slice(0, 3).map((cat, i) => (
                   <div key={cat.id} className="space-y-1">
-                    <div className="flex justify-between text-[10px] font-bold">
-                      <span className="text-slate-400">{cat.emoji} {cat.label}</span>
-                      <span className="text-slate-200">{Math.round((cat.total / ringkasan.pengeluaran) * 100)}%</span>
+                    <div className="flex justify-between items-center text-[10px] font-bold gap-2">
+                      <span className="text-slate-400 truncate flex-1">{cat.emoji} {cat.label}</span>
+                      <span className="text-slate-200 flex-shrink-0">{formatRupiah(cat.total, true)}</span>
                     </div>
                     <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${(cat.total / ringkasan.pengeluaran) * 100}%`, backgroundColor: ["#6366f1", "#10b981", "#f59e0b"][i] }} />
+                      <div className="h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${Math.min((cat.total / ringkasan.pengeluaran) * 100, 100)}%`, backgroundColor: ["#6366f1", "#10b981", "#f59e0b"][i] }} />
                     </div>
                   </div>
                 ))}
