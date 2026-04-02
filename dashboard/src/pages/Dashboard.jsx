@@ -62,17 +62,20 @@ export default function Dashboard({ onTambah, onNav }) {
         </div>
 
         {/* Small Stats: Pemasukan */}
-        <div className="card p-4 bg-emerald-500/5 border-emerald-500/10 flex flex-col justify-between">
+        <div className="card p-4 bg-emerald-500/5 border-emerald-500/10 flex flex-col justify-between overflow-hidden">        
           <p className="text-[9px] text-emerald-500/60 uppercase tracking-widest font-black mb-1">Pemasukan</p>
-          <p className="text-emerald-400 font-bold text-base sm:text-lg break-all leading-tight">+{formatRupiah(ringkasan.pemasukan, true)}</p>
+          <p className={`text-emerald-400 font-bold whitespace-nowrap leading-tight ${ringkasan.pemasukan.toString().length > 6 ? "text-sm" : "text-base sm:text-lg"}`}>
+            +{formatRupiah(ringkasan.pemasukan, ringkasan.pemasukan.toString().length > 6)}
+          </p>
         </div>
 
         {/* Small Stats: Pengeluaran */}
-        <div className="card p-4 bg-rose-500/5 border-rose-500/10 flex flex-col justify-between">
+        <div className="card p-4 bg-rose-500/5 border-rose-500/10 flex flex-col justify-between overflow-hidden">
           <p className="text-[9px] text-rose-500/60 uppercase tracking-widest font-black mb-1">Pengeluaran</p>
-          <p className="text-rose-400 font-bold text-base sm:text-lg break-all leading-tight">-{formatRupiah(ringkasan.pengeluaran, true)}</p>
+          <p className={`text-rose-400 font-bold whitespace-nowrap leading-tight ${ringkasan.pengeluaran.toString().length > 6 ? "text-sm" : "text-base sm:text-lg"}`}>
+            -{formatRupiah(ringkasan.pengeluaran, ringkasan.pengeluaran.toString().length > 6)}
+          </p>
         </div>
-
         {/* Trend Chart - Large (Full Width) */}
         {ringkasan.perMinggu?.length > 0 && (
           <div className="col-span-2 card p-5 bg-gradient-to-b from-slate-900/50 to-transparent">

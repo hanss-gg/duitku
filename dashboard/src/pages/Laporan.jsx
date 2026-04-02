@@ -68,16 +68,16 @@ export default function Laporan() {
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2 flex items-center gap-1 flex-shrink-0">
                 <span className="text-emerald-400">↓</span> Pemasukan
               </p>
-              <p className={`text-rupiah text-white break-words leading-tight ${laporan.pemasukan.toString().length > 10 ? "text-xs" : laporan.pemasukan.toString().length > 7 ? "text-sm" : "text-lg"}`}>
-                {formatRupiah(laporan.pemasukan, laporan.pemasukan.toString().length > 8)}
+              <p className={`text-rupiah text-white whitespace-nowrap leading-tight ${laporan.pemasukan.toString().length > 9 ? "text-xs" : laporan.pemasukan.toString().length > 6 ? "text-sm" : "text-lg"}`}>
+                {formatRupiah(laporan.pemasukan, laporan.pemasukan.toString().length > 6)}
               </p>
             </div>
             <div className="card p-4 hover:border-rose-500/30 transition-colors flex flex-col justify-between overflow-hidden">
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2 flex items-center gap-1 flex-shrink-0">
                 <span className="text-rose-400">↑</span> Pengeluaran
               </p>
-              <p className={`text-rupiah text-white break-words leading-tight ${laporan.pengeluaran.toString().length > 10 ? "text-xs" : laporan.pengeluaran.toString().length > 7 ? "text-sm" : "text-lg"}`}>
-                {formatRupiah(laporan.pengeluaran, laporan.pengeluaran.toString().length > 8)}
+              <p className={`text-rupiah text-white whitespace-nowrap leading-tight ${laporan.pengeluaran.toString().length > 9 ? "text-xs" : laporan.pengeluaran.toString().length > 6 ? "text-sm" : "text-lg"}`}>
+                {formatRupiah(laporan.pengeluaran, laporan.pengeluaran.toString().length > 6)}
               </p>
             </div>
           </div>
