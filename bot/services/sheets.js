@@ -14,55 +14,48 @@ dotenv.config({ path: envPath });
 
 // ── Auth ──────────────────────────────────────────────────────
 function getSheetsClient(tokens = null) {
-  const auth = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI
-  );
+  const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI?.trim();
+
+  if (!clientId || !clientSecret) {
+    throw new Error("GOOGLE_CLIENT_ID atau GOOGLE_CLIENT_SECRET belum diisi di .env");
+  }
+
+  const auth = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
 
   // Persistence: Save new token if it's refreshed
   auth.on("tokens", (newTokens) => {
-    console.log("🔄 Google Token refreshed, saving to .env...");
-    // Only update if it's the global token (not from a specific session)
+    console.log("🔄 Google Token refreshed!");
     if (!tokens) {
-      const currentTokenRaw = process.env.GOOGLE_TOKEN;
       let currentToken = {};
       try { 
-        currentToken = typeof currentTokenRaw === "string" 
-          ? JSON.parse(currentTokenRaw) 
-          : (currentTokenRaw || {}); 
+        const raw = process.env.GOOGLE_TOKEN;
+        currentToken = typeof raw === "string" ? JSON.parse(raw) : (raw || {}); 
       } catch(e) {}
       
       const updatedToken = { ...currentToken, ...newTokens };
       const tokenValue = JSON.stringify(updatedToken);
+      process.env.GOOGLE_TOKEN = tokenValue; 
       updateEnv("GOOGLE_TOKEN", tokenValue);
-      process.env.GOOGLE_TOKEN = tokenValue; // Store as string for next parsing
     }
   });
 
   let creds;
   try {
-    let rawToken = process.env.GOOGLE_TOKEN;
-    if (!rawToken) throw new Error("GOOGLE_TOKEN is empty");
+    const rawToken = tokens || process.env.GOOGLE_TOKEN;
+    if (!rawToken) throw new Error("GOOGLE_TOKEN kosong");
 
     if (typeof rawToken === "object") {
-      creds = tokens ?? rawToken;
+      creds = rawToken;
     } else {
-      try {
-        creds = tokens ?? JSON.parse(rawToken);
-      } catch (parseErr) {
-        // Fallback: handle cases where the string might be extra-escaped
-        const unescaped = rawToken.replace(/\\"/g, '"').replace(/^"|"$/g, "");
-        creds = tokens ?? JSON.parse(unescaped);
-      }
+      // Handle Railway double-escaping or simple strings
+      const cleanJson = rawToken.trim().replace(/^'|'$/g, "").replace(/^"|"$/g, "").replace(/\\"/g, '"');
+      creds = JSON.parse(cleanJson);
     }
   } catch (e) {
-    console.error("⚠️ GOOGLE_TOKEN di .env tidak valid atau kosong. Silakan jalankan setup:token.");
-    creds = tokens || {}; 
-  }
-
-  if (Object.keys(creds).length === 0) {
-    throw new Error("Kredensial Google kosong. Silakan jalankan 'npm run setup:token'.");
+    console.error("❌ Gagal parsing GOOGLE_TOKEN:", e.message);
+    throw new Error("Format GOOGLE_TOKEN tidak valid. Pastikan copy-paste JSON dengan benar.");
   }
 
   auth.setCredentials(creds);
